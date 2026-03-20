@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Play, Pause, RotateCcw, Upload, Activity, Droplets, Eye, FileUp } from "lucide-react";
+import { Play, Pause, RotateCcw, Upload, Download, Activity, Droplets, Eye, FileUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { parseCsvToSignalData, type CsvSignalPoint } from "@/lib/csv-parser";
 
@@ -263,18 +263,35 @@ export default function DecoderView({ researcherName, institution }: Props) {
                 className="hidden"
                 onChange={handleCsvUpload}
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-dashed border-primary/40 text-primary text-xs font-medium hover:bg-primary/5 transition-colors"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                {csvLoaded ? "Replace CSV Data" : "Upload CSV Data"}
-              </button>
-              {csvLoaded && (
-                <p className="text-xs text-muted-foreground font-mono-sci text-center">
-                  Expected columns: time, signal (0–1)
-                </p>
-              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-dashed border-primary/40 text-primary text-xs font-medium hover:bg-primary/5 transition-colors"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  {csvLoaded ? "Replace CSV" : "Upload CSV"}
+                </button>
+                <button
+                  onClick={() => {
+                    const sample = "time,signal\n0,0.12\n1,0.18\n2,0.25\n3,0.31\n4,0.44\n5,0.52\n6,0.61\n7,0.73\n8,0.65\n9,0.58\n10,0.49\n11,0.42\n12,0.55\n13,0.68\n14,0.77\n15,0.82\n16,0.74\n17,0.63\n18,0.51\n19,0.39\n20,0.28";
+                    const blob = new Blob([sample], { type: "text/csv" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sample_signal_data.csv";
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    addLog("[SYS] Sample CSV downloaded.");
+                  }}
+                  className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Sample CSV
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground font-mono-sci text-center">
+                Expected columns: time, signal (0–1)
+              </p>
             </div>
           </div>
         </div>
