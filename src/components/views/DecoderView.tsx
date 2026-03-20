@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Play, Pause, RotateCcw, Upload, Activity, Droplets, Eye, FileUp } from "lucide-react";
+import { Play, Pause, RotateCcw, Upload, Download, Activity, Droplets, Eye, FileUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { parseCsvToSignalData, type CsvSignalPoint } from "@/lib/csv-parser";
 
