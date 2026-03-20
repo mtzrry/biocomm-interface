@@ -1,16 +1,40 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import FloatingNav from "@/components/FloatingNav";
+import ResearcherModal from "@/components/ResearcherModal";
+import HomeView from "@/components/views/HomeView";
+import DecoderView from "@/components/views/DecoderView";
+import TeamView from "@/components/views/TeamView";
+import PaperView from "@/components/views/PaperView";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+type View = "home" | "decoder" | "team" | "paper";
+
+export default function Index() {
+  const [view, setView] = useState<View>("home");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [researcherName, setResearcherName] = useState("");
+  const [institution, setInstitution] = useState("");
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="min-h-screen bg-background">
+      <FloatingNav
+        currentView={view}
+        setView={setView}
+        onResearcherAccess={() => setModalOpen(true)}
+        researcherName={researcherName}
+      />
+
+      {view === "home" && <HomeView onLaunch={() => setView("decoder")} />}
+      {view === "decoder" && <DecoderView researcherName={researcherName} institution={institution} />}
+      {view === "team" && <TeamView />}
+      {view === "paper" && <PaperView />}
+
+      <ResearcherModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={(n, i) => { setResearcherName(n); setInstitution(i); }}
+        initialName={researcherName}
+        initialInstitution={institution}
+      />
     </div>
   );
-};
-
-const Index = PlaceholderIndex;
-
-export default Index;
+}
