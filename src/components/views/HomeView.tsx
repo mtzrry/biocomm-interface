@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import BioBackground from "@/components/BioBackground";
 
 interface Props {
   onLaunch: () => void;
@@ -7,19 +8,19 @@ interface Props {
 
 export default function HomeView({ onLaunch }: Props) {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      {/* Spline 3D Background */}
-      <iframe
-        src="https://my.spline.design/wEibmkc-yCdFX1gT/"
-        frameBorder="0"
-        width="100%"
-        height="100%"
-        style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
-        title="3D Background"
-      />
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      {/* Animated particle background */}
+      <BioBackground />
 
-      {/* Mobile fade overlay for readability */}
-      <div className="absolute inset-0 z-[1] bg-background/70 md:bg-background/40 pointer-events-none" />
+      {/* Gradient overlays for depth */}
+      <div className="absolute inset-0 z-[1] pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-accent/10 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[160px]" />
+      </div>
+
+      {/* Mobile fade overlay */}
+      <div className="absolute inset-0 z-[2] bg-background/50 md:bg-background/30 pointer-events-none" />
 
       {/* Hero content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
