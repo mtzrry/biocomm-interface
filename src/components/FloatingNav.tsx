@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, FlaskConical } from "lucide-react";
+import { Menu, X, FlaskConical, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type View = "home" | "decoder" | "team" | "paper";
@@ -8,6 +8,7 @@ interface FloatingNavProps {
   currentView: View;
   setView: (v: View) => void;
   onResearcherAccess: () => void;
+  onSettingsOpen: () => void;
   researcherName: string;
 }
 
@@ -18,7 +19,7 @@ const navItems: { label: string; view: View }[] = [
   { label: "Research Paper", view: "paper" },
 ];
 
-export default function FloatingNav({ currentView, setView, onResearcherAccess, researcherName }: FloatingNavProps) {
+export default function FloatingNav({ currentView, setView, onResearcherAccess, onSettingsOpen, researcherName }: FloatingNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -47,6 +48,13 @@ export default function FloatingNav({ currentView, setView, onResearcherAccess, 
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={onSettingsOpen}
+            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
           <button
             onClick={onResearcherAccess}
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
