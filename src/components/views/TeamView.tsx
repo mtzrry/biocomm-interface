@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Linkedin, Github } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const team = [
   { name: "Dr. Rina Setiawan", role: "Principal Investigator", bio: "Leads the chromoprotein expression and signal design research.", initials: "RS", color: "bg-emerald-100 text-emerald-700" },
@@ -12,14 +13,16 @@ const team = [
 ];
 
 export default function TeamView() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen pt-24 pb-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <p className="font-mono-sci text-xs tracking-[0.3em] text-primary mb-3 uppercase">Research Unit</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Meet the Research Team</h2>
+          <p className="font-mono-sci text-xs tracking-[0.3em] text-primary mb-3 uppercase">{t("researchUnit")}</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">{t("meetTeam")}</h2>
           <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            The multidisciplinary minds behind the Bio-Digital Transducer.
+            {t("teamSubtitle")}
           </p>
         </motion.div>
 
