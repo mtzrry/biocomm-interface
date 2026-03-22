@@ -19,7 +19,7 @@ const navItems: { label: string; view: View }[] = [
   { label: "Research Paper", view: "paper" },
 ];
 
-export default function FloatingNav({ currentView, setView, onResearcherAccess, researcherName }: FloatingNavProps) {
+export default function FloatingNav({ currentView, setView, onResearcherAccess, onSettingsOpen, researcherName }: FloatingNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
