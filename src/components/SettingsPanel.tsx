@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sun, Moon, Type, ALargeSmall } from "lucide-react";
+import { X, Sun, Moon, Type, ALargeSmall, Globe } from "lucide-react";
 import { useSettings, type Theme, type FontSize, type FontFamily } from "@/contexts/SettingsContext";
+import { useLanguage, type Language } from "@/contexts/LanguageContext";
 
 interface Props {
   open: boolean;
@@ -9,21 +10,27 @@ interface Props {
 
 export default function SettingsPanel({ open, onClose }: Props) {
   const { theme, fontSize, fontFamily, setTheme, setFontSize, setFontFamily } = useSettings();
+  const { language, setLanguage, t } = useLanguage();
 
   const themes: { value: Theme; label: string; icon: typeof Sun; desc: string }[] = [
-    { value: "light", label: "Clean Bio-Tech", icon: Sun, desc: "Mint/slate clinical" },
-    { value: "dark", label: "Cyberpunk Bio", icon: Moon, desc: "Dark neon laboratory" },
+    { value: "light", label: t("cleanBioTech"), icon: Sun, desc: t("mintSlateClinical") },
+    { value: "dark", label: t("cyberpunkBio"), icon: Moon, desc: t("darkNeonLab") },
   ];
 
   const sizes: { value: FontSize; label: string }[] = [
-    { value: "small", label: "Small" },
-    { value: "medium", label: "Medium" },
-    { value: "large", label: "Large" },
+    { value: "small", label: t("small") },
+    { value: "medium", label: t("medium") },
+    { value: "large", label: t("large") },
   ];
 
   const fonts: { value: FontFamily; label: string; desc: string }[] = [
-    { value: "inter", label: "Inter", desc: "Clinical UI" },
-    { value: "roboto", label: "Roboto", desc: "Academic UI" },
+    { value: "inter", label: "Inter", desc: t("clinical") },
+    { value: "roboto", label: "Roboto", desc: t("academic") },
+  ];
+
+  const languages: { value: Language; label: string; flag: string }[] = [
+    { value: "en", label: "English (EN)", flag: "🇬🇧" },
+    { value: "id", label: "Bahasa Indonesia (ID)", flag: "🇮🇩" },
   ];
 
   return (
@@ -40,34 +47,57 @@ export default function SettingsPanel({ open, onClose }: Props) {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="glass-panel-strong rounded-2xl p-6 w-full max-w-md relative z-10"
+            className="glass-panel-strong rounded-2xl p-6 w-full max-w-md relative z-10 max-h-[90vh] overflow-y-auto"
           >
             <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-lg font-semibold text-foreground mb-1">Settings</h2>
-            <p className="text-sm text-muted-foreground mb-6">Configure the interface appearance.</p>
+            <h2 className="text-lg font-semibold text-foreground mb-1">{t("settings")}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{t("settingsDesc")}</p>
 
-            {/* Theme */}
+            {/* Language */}
             <div className="mb-5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
-                <Sun className="w-3 h-3 inline mr-1.5" />Theme
+                <Globe className="w-3 h-3 inline mr-1.5" />{t("language")}
               </label>
               <div className="grid grid-cols-2 gap-2">
-                {themes.map((t) => (
+                {languages.map((l) => (
                   <button
-                    key={t.value}
-                    onClick={() => setTheme(t.value)}
+                    key={l.value}
+                    onClick={() => setLanguage(l.value)}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all ${
-                      theme === t.value
+                      language === l.value
                         ? "border-primary bg-primary/10 text-foreground font-medium"
                         : "border-border text-muted-foreground hover:border-primary/40"
                     }`}
                   >
-                    <t.icon className="w-4 h-4" />
+                    <span className="text-base">{l.flag}</span>
+                    <span className="text-xs font-medium">{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Theme */}
+            <div className="mb-5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
+                <Sun className="w-3 h-3 inline mr-1.5" />{t("theme")}
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {themes.map((th) => (
+                  <button
+                    key={th.value}
+                    onClick={() => setTheme(th.value)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm transition-all ${
+                      theme === th.value
+                        ? "border-primary bg-primary/10 text-foreground font-medium"
+                        : "border-border text-muted-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <th.icon className="w-4 h-4" />
                     <div className="text-left">
-                      <div className="text-xs font-medium">{t.label}</div>
-                      <div className="text-[10px] opacity-60">{t.desc}</div>
+                      <div className="text-xs font-medium">{th.label}</div>
+                      <div className="text-[10px] opacity-60">{th.desc}</div>
                     </div>
                   </button>
                 ))}
@@ -77,7 +107,7 @@ export default function SettingsPanel({ open, onClose }: Props) {
             {/* Font Size */}
             <div className="mb-5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
-                <ALargeSmall className="w-3 h-3 inline mr-1.5" />Font Size
+                <ALargeSmall className="w-3 h-3 inline mr-1.5" />{t("fontSizeLabel")}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {sizes.map((s) => (
@@ -99,7 +129,7 @@ export default function SettingsPanel({ open, onClose }: Props) {
             {/* Font Family */}
             <div>
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
-                <Type className="w-3 h-3 inline mr-1.5" />Font Family
+                <Type className="w-3 h-3 inline mr-1.5" />{t("fontFamily")}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {fonts.map((f) => (
@@ -119,7 +149,7 @@ export default function SettingsPanel({ open, onClose }: Props) {
                 ))}
               </div>
               <p className="text-[10px] text-muted-foreground mt-2 font-mono-sci text-center">
-                JetBrains Mono remains fixed for all numeric/terminal data.
+                {t("fontNote")}
               </p>
             </div>
           </motion.div>

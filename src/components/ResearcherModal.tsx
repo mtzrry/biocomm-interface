@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Building } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
   open: boolean;
@@ -13,6 +14,7 @@ interface Props {
 export default function ResearcherModal({ open, onClose, onSave, initialName, initialInstitution }: Props) {
   const [name, setName] = useState(initialName);
   const [institution, setInstitution] = useState(initialInstitution);
+  const { t } = useLanguage();
 
   return (
     <AnimatePresence>
@@ -33,15 +35,15 @@ export default function ResearcherModal({ open, onClose, onSave, initialName, in
             <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground">
               <X className="w-5 h-5" />
             </button>
-            <h2 className="text-lg font-semibold text-foreground mb-1">Researcher Identity</h2>
-            <p className="text-sm text-muted-foreground mb-5">Enter your credentials to personalize the interface.</p>
+            <h2 className="text-lg font-semibold text-foreground mb-1">{t("researcherIdentity")}</h2>
+            <p className="text-sm text-muted-foreground mb-5">{t("researcherModalDesc")}</p>
             <div className="space-y-4">
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Full Name"
+                  placeholder={t("fullName")}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
@@ -50,7 +52,7 @@ export default function ResearcherModal({ open, onClose, onSave, initialName, in
                 <input
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
-                  placeholder="Institution"
+                  placeholder={t("institution")}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 />
               </div>
@@ -58,7 +60,7 @@ export default function ResearcherModal({ open, onClose, onSave, initialName, in
                 onClick={() => { onSave(name, institution); onClose(); }}
                 className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm glow-btn"
               >
-                Save Identity
+                {t("saveIdentity")}
               </button>
             </div>
           </motion.div>

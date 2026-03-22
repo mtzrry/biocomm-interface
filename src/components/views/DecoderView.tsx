@@ -9,6 +9,7 @@ import {
   parseCsvToSignalData, parseScientificCsv, isScientificCsv,
   decodeBioSignal, type CsvSignalPoint, type ScientificCsvPoint
 } from "@/lib/csv-parser";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Props {
   researcherName: string;
@@ -25,13 +26,14 @@ function generateSignalPoint(tick: number) {
 }
 
 export default function DecoderView({ researcherName, institution }: Props) {
+  const { t } = useLanguage();
   const [running, setRunning] = useState(false);
   const [tick, setTick] = useState(0);
   const [data, setData] = useState<CsvSignalPoint[]>([]);
   const [sciData, setSciData] = useState<ScientificCsvPoint[]>([]);
   const [isScientific, setIsScientific] = useState(false);
   const [decodedChars, setDecodedChars] = useState<string[]>([]);
-  const [logs, setLogs] = useState<string[]>(["[SYS] Decoder Engine initialized.", "[SYS] Awaiting START command..."]);
+  const [logs, setLogs] = useState<string[]>([t("logInit"), t("logAwaiting")]);
   const [targetSeq, setTargetSeq] = useState(TARGET_WORD);
   const [csvLoaded, setCsvLoaded] = useState(false);
   const [csvFileName, setCsvFileName] = useState("");
@@ -46,7 +48,6 @@ export default function DecoderView({ researcherName, institution }: Props) {
     setLogs((prev) => [...prev.slice(-50), msg]);
   }, []);
 
-  // Build reference areas for scientific data (shading stimulus periods)
   const stimulusAreas = useCallback(() => {
     if (!isScientific || sciData.length === 0) return [];
     const areas: { x1: number; x2: number; freq: number }[] = [];
@@ -66,7 +67,6 @@ export default function DecoderView({ researcherName, institution }: Props) {
     return areas;
   }, [isScientific, sciData]);
 
-  // Handle CSV upload
   const handleCsvUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -90,7 +90,6 @@ export default function DecoderView({ researcherName, institution }: Props) {
           setRunning(false);
           setTick(parsed.length);
 
-          // Run bio-signal decoder
           const { symbols, decoded } = decodeBioSignal(parsed);
           setDecodedChars(symbols);
 
@@ -153,15 +152,15 @@ export default function DecoderView({ researcherName, institution }: Props) {
 
   const handleStart = () => {
     if (csvLoaded) {
-      addLog("[SYS] CSV data loaded — chart displays uploaded data.");
+      addLog(t("logCsvLoaded"));
       return;
     }
     setRunning(true);
-    addLog("[SYS] Signal acquisition STARTED.");
+    addLog(t("logStarted"));
   };
   const handlePause = () => {
     setRunning(false);
-    addLog("[SYS] Signal acquisition PAUSED.");
+    addLog(t("logPaused"));
   };
   const handleReset = () => {
     setRunning(false);
@@ -172,7 +171,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
     setDecodedChars([]);
     setCsvLoaded(false);
     setCsvFileName("");
-    setLogs(["[SYS] Decoder Engine RESET.", "[SYS] Awaiting START command..."]);
+    setLogs([t("logReset"), t("logAwaiting")]);
   };
 
   const timeline = isScientific
@@ -181,12 +180,10 @@ export default function DecoderView({ researcherName, institution }: Props) {
 
   const areas = stimulusAreas();
 
-  // Displayed metrics for scientific data
   const displayPh = isScientific && sciData.length > 0 ? sciData[sciData.length - 1].ph_level.toFixed(2) : ph;
   const displayOd = isScientific && sciData.length > 0 ? sciData[sciData.length - 1].od600.toFixed(3) : od600;
   const displayColor = isScientific && sciData.length > 0 ? sciData[sciData.length - 1].color_intensity.toFixed(1) : colorIntensity;
 
-  // Decoded display
   const displayDecoded = isScientific ? decodedChars : decodedChars;
   const displayTarget = isScientific ? decodedChars.join("") || "..." : targetSeq;
 
@@ -196,7 +193,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">Decoder Dashboard</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">{t("decoderDashboard")}</h2>
             <p className="text-xs text-muted-foreground font-mono-sci">BIO-DIGITAL TRANSDUCER v2.0</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -222,9 +219,9 @@ export default function DecoderView({ researcherName, institution }: Props) {
             {/* Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { label: "pH Level", value: displayPh, icon: Droplets, color: "text-primary" },
-                { label: "OD600", value: displayOd, icon: Activity, color: "text-teal-600" },
-                { label: "Color Intensity", value: `${displayColor}%`, icon: Eye, color: "text-emerald-500" },
+                { label: t("phLevel"), value: displayPh, icon: Droplets, color: "text-primary" },
+                { label: t("od600"), value: displayOd, icon: Activity, color: "text-teal-600" },
+                { label: t("colorIntensity"), value: `${displayColor}%`, icon: Eye, color: "text-emerald-500" },
               ].map((m) => (
                 <div key={m.label} className="glass-panel-strong rounded-xl settings-panel-padding">
                   <div className="flex items-center gap-2 mb-1">
@@ -239,7 +236,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
             {/* Chart */}
             <div className="glass-panel-strong rounded-xl settings-panel-padding">
               <p className="text-xs text-muted-foreground mb-3 font-mono-sci">
-                {isScientific ? `Multi-metric Chart — ${sciData.length} pts` : csvLoaded ? `Signal Curve — CSV (${data.length} pts)` : "Signal Curve — Real-time"}
+                {isScientific ? `Multi-metric Chart — ${sciData.length} pts` : csvLoaded ? `Signal Curve — CSV (${data.length} pts)` : `Signal Curve — ${t("simulationMode")}`}
               </p>
               <div className="h-52 md:h-64 settings-chart-height">
                 <ResponsiveContainer width="100%" height="100%">
@@ -250,7 +247,6 @@ export default function DecoderView({ researcherName, institution }: Props) {
                       <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
                       <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }} />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
-                      {/* Stimulus shading */}
                       {areas.map((a, i) => (
                         <ReferenceArea
                           key={i}
@@ -281,7 +277,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
             {/* Timeline raster */}
             <div className="glass-panel-strong rounded-xl settings-panel-padding">
               <p className="text-xs text-muted-foreground mb-2 font-mono-sci">
-                {isScientific ? "OD600 Timeline" : "Signal Timeline"}
+                {isScientific ? t("od600Timeline") : t("signalTimeline")}
               </p>
               <div className="flex gap-0.5 overflow-x-auto">
                 {timeline.map((d, i) => (
@@ -297,7 +293,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
             {/* Decoded output */}
             <div className="glass-panel-strong rounded-xl p-5 text-center">
               <p className="text-xs text-muted-foreground mb-2 font-mono-sci">
-                {isScientific ? "Morse Decode (· = 100Hz DOT, − = 10kHz DASH)" : "Decoded Output"}
+                {isScientific ? t("morseDecodeLabel") : t("decodedOutput")}
               </p>
               <div className="flex justify-center gap-2 flex-wrap">
                 {isScientific ? (
@@ -312,7 +308,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
                       {sym}
                     </motion.span>
                   )) : (
-                    <span className="text-muted-foreground text-sm font-mono-sci">No stimulus periods detected</span>
+                    <span className="text-muted-foreground text-sm font-mono-sci">{t("noStimulus")}</span>
                   )
                 ) : (
                   targetSeq.split("").map((char, i) => (
@@ -334,7 +330,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
           <div className="lg:col-span-4 space-y-4">
             {/* Terminal */}
             <div className="terminal-panel rounded-xl p-4 h-72 lg:h-96 flex flex-col">
-              <p className="text-xs opacity-60 mb-2">// SYSTEM LOG</p>
+              <p className="text-xs opacity-60 mb-2">// {t("systemLog").toUpperCase()}</p>
               <div ref={logRef} className="flex-1 overflow-y-auto text-xs leading-relaxed space-y-0.5 scrollbar-thin">
                 {logs.map((l, i) => (
                   <div key={i} className={l.startsWith("[CSV]") ? "text-emerald-400" : l.startsWith("[ERR]") ? "text-red-400" : l.startsWith("[DEC]") ? "text-cyan-400" : "opacity-80"}>
@@ -349,7 +345,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
             <div className="glass-panel-strong rounded-xl settings-panel-padding space-y-3">
               {!isScientific && (
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block font-mono-sci">Target Sequence</label>
+                  <label className="text-xs text-muted-foreground mb-1 block font-mono-sci">{t("targetSequence")}</label>
                   <input
                     value={targetSeq}
                     onChange={(e) => setTargetSeq(e.target.value.toUpperCase())}
@@ -360,13 +356,13 @@ export default function DecoderView({ researcherName, institution }: Props) {
               )}
               <div className="grid grid-cols-3 gap-2">
                 <button onClick={handleStart} disabled={running} className="flex items-center justify-center gap-1 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40 glow-btn">
-                  <Play className="w-3 h-3" /> START
+                  <Play className="w-3 h-3" /> {t("start")}
                 </button>
                 <button onClick={handlePause} disabled={!running} className="flex items-center justify-center gap-1 py-2 rounded-lg border border-border text-foreground text-xs font-medium disabled:opacity-40 hover:bg-muted transition-colors">
-                  <Pause className="w-3 h-3" /> PAUSE
+                  <Pause className="w-3 h-3" /> {t("pause")}
                 </button>
                 <button onClick={handleReset} className="flex items-center justify-center gap-1 py-2 rounded-lg border border-border text-foreground text-xs font-medium hover:bg-muted transition-colors">
-                  <RotateCcw className="w-3 h-3" /> RESET
+                  <RotateCcw className="w-3 h-3" /> {t("reset")}
                 </button>
               </div>
 
@@ -378,7 +374,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
                   className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-dashed border-primary/40 text-primary text-xs font-medium hover:bg-primary/5 transition-colors"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  {csvLoaded ? "Replace CSV" : "Upload CSV"}
+                  {csvLoaded ? t("replaceCsv") : t("uploadCsv")}
                 </button>
                 <button
                   onClick={() => {
@@ -390,16 +386,16 @@ export default function DecoderView({ researcherName, institution }: Props) {
                     a.download = "sample_scientific_data.csv";
                     a.click();
                     URL.revokeObjectURL(url);
-                    addLog("[SYS] Scientific sample CSV downloaded (Harris et al. format).");
+                    addLog(t("logSampleDownloaded"));
                   }}
                   className="flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  Sample CSV
+                  {t("sampleCsv")}
                 </button>
               </div>
               <p className="text-xs text-muted-foreground font-mono-sci text-center">
-                Format: time_s, sound_freq_hz, ph_level, od600, color_intensity
+                {t("csvFormat")}
               </p>
             </div>
           </div>
