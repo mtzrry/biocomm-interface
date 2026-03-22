@@ -8,6 +8,7 @@ interface FloatingNavProps {
   currentView: View;
   setView: (v: View) => void;
   onResearcherAccess: () => void;
+  onSettingsOpen: () => void;
   researcherName: string;
 }
 
