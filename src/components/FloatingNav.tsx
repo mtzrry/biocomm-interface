@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, FlaskConical } from "lucide-react";
+import { Menu, X, FlaskConical, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type View = "home" | "decoder" | "team" | "paper";
