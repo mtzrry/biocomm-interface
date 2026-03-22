@@ -49,6 +49,13 @@ export default function FloatingNav({ currentView, setView, onResearcherAccess, 
 
         <div className="flex items-center gap-2">
           <button
+            onClick={onSettingsOpen}
+            className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            title="Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+          <button
             onClick={onResearcherAccess}
             className="px-3 py-1.5 rounded-full text-xs font-medium border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
           >
