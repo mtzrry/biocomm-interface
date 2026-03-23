@@ -37,6 +37,21 @@ const translations = {
     csvFormat: "Format: time_s, sound_freq_hz, ph_level, od600, color_intensity",
     simulationMode: "Simulation Mode",
     systemLog: "System Log",
+    // Sensory feedback
+    sensoryFeedback: "Audio / Haptic",
+    sensoryOn: "ON",
+    sensoryOff: "OFF",
+    // Decoded output
+    decodedResultLabel: "Decoded Result",
+    morseRepresentation: "Morse Representation",
+    // Calibration
+    calibrationModel: "Calibration Model",
+    uploadCalibration: "Upload Calibration Model (CSV)",
+    calibrationLoaded: "Calibration loaded",
+    calibrationFormat: "Header: type, character, morse_code, min_duration_s, max_duration_s, avg_ph_drop, avg_od_spike",
+    clearCalibration: "Clear Calibration",
+    calibrationSymbols: "symbols",
+    calibrationDictEntries: "dictionary entries",
     // Logs
     logInit: "[SYS] Decoder Engine initialized.",
     logAwaiting: "[SYS] Awaiting START command...",
@@ -45,6 +60,8 @@ const translations = {
     logReset: "[SYS] Decoder Engine RESET.",
     logCsvLoaded: "[SYS] CSV data loaded — chart displays uploaded data.",
     logSampleDownloaded: "[SYS] Scientific sample CSV downloaded (Harris et al. format).",
+    logCalibrationLoaded: "[CAL] Calibration model loaded.",
+    logCalibrationCleared: "[CAL] Calibration model cleared.",
     // Team
     researchUnit: "Research Unit",
     meetTeam: "Meet the Research Team",
