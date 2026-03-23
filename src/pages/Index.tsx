@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { CalibrationProvider } from "@/contexts/CalibrationContext";
 import FloatingNav from "@/components/FloatingNav";
 import ResearcherModal from "@/components/ResearcherModal";
 import SettingsPanel from "@/components/SettingsPanel";
@@ -21,30 +22,32 @@ export default function Index() {
   return (
     <SettingsProvider>
       <LanguageProvider>
-        <div className="min-h-screen bg-background">
-          <FloatingNav
-            currentView={view}
-            setView={setView}
-            onResearcherAccess={() => setModalOpen(true)}
-            onSettingsOpen={() => setSettingsOpen(true)}
-            researcherName={researcherName}
-          />
+        <CalibrationProvider>
+          <div className="min-h-screen bg-background">
+            <FloatingNav
+              currentView={view}
+              setView={setView}
+              onResearcherAccess={() => setModalOpen(true)}
+              onSettingsOpen={() => setSettingsOpen(true)}
+              researcherName={researcherName}
+            />
 
-          {view === "home" && <HomeView onLaunch={() => setView("decoder")} />}
-          {view === "decoder" && <DecoderView researcherName={researcherName} institution={institution} />}
-          {view === "team" && <TeamView />}
-          {view === "paper" && <PaperView />}
+            {view === "home" && <HomeView onLaunch={() => setView("decoder")} />}
+            {view === "decoder" && <DecoderView researcherName={researcherName} institution={institution} />}
+            {view === "team" && <TeamView />}
+            {view === "paper" && <PaperView />}
 
-          <ResearcherModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            onSave={(n, i) => { setResearcherName(n); setInstitution(i); }}
-            initialName={researcherName}
-            initialInstitution={institution}
-          />
+            <ResearcherModal
+              open={modalOpen}
+              onClose={() => setModalOpen(false)}
+              onSave={(n, i) => { setResearcherName(n); setInstitution(i); }}
+              initialName={researcherName}
+              initialInstitution={institution}
+            />
 
-          <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-        </div>
+            <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+          </div>
+        </CalibrationProvider>
       </LanguageProvider>
     </SettingsProvider>
   );
