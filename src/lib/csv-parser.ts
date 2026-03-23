@@ -1,3 +1,5 @@
+import type { CalibrationSymbol, CalibrationDictEntry } from "@/contexts/CalibrationContext";
+
 export interface CsvSignalPoint {
   t: number;
   signal: number;
@@ -11,6 +13,16 @@ export interface ScientificCsvPoint {
   od600: number;
   color_intensity: number;
 }
+
+/** Standard Morse code dictionary */
+const MORSE_DICT: Record<string, string> = {
+  ".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E",
+  "..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J",
+  "-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O",
+  ".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T",
+  "..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y",
+  "--..": "Z",
+};
 
 /** Legacy parser for simple time,signal CSVs */
 export function parseCsvToSignalData(
@@ -50,8 +62,7 @@ export function parseCsvToSignalData(
   return data;
 }
 
-/** Scientific parser for Harris et al. 2021 format:
- *  time_s,sound_freq_hz,ph_level,od600,color_intensity */
+/** Scientific parser for Harris et al. 2021 format */
 export function parseScientificCsv(csvText: string): ScientificCsvPoint[] {
   const lines = csvText.trim().split("\n");
   if (lines.length < 2) return [];
@@ -63,7 +74,7 @@ export function parseScientificCsv(csvText: string): ScientificCsvPoint[] {
 
   for (const col of requiredCols) {
     const idx = header.indexOf(col);
-    if (idx === -1) return []; // strict: all columns required
+    if (idx === -1) return [];
     colMap[col] = idx;
   }
 
@@ -91,48 +102,106 @@ export function isScientificCsv(csvText: string): boolean {
   return firstLine.includes("time_s") && firstLine.includes("sound_freq_hz");
 }
 
-/** Decode bio-signal from scientific data using OD600 spikes during sound stimuli.
- *  100 Hz → DOT, 10000 Hz → DASH. Groups decoded via Morse-like mapping. */
+export interface DecodeResult {
+  symbols: string[];  // "·" or "−" or " "
+  decoded: string;
+  letters: { char: string; morse: string }[];
+}
+
+/** Decode bio-signal from scientific data.
+ *  Supports optional calibration model for dynamic thresholds. */
 export function decodeBioSignal(
   data: ScientificCsvPoint[],
-  od600Threshold: number = 0.3
-): { symbols: string[]; decoded: string } {
+  od600Threshold: number = 0.3,
+  calibrationSymbols?: CalibrationSymbol[],
+  calibrationDict?: CalibrationDictEntry[]
+): DecodeResult {
   const symbols: string[] = [];
   let inStimulus = false;
   let currentFreq = 0;
   let spikeCount = 0;
+  let stimStart = -1;
+
+  // Build lookup from calibration dictionary
+  const morseToChar: Record<string, string> = {};
+  if (calibrationDict && calibrationDict.length > 0) {
+    for (const entry of calibrationDict) {
+      morseToChar[entry.morse_code] = entry.character;
+    }
+  } else {
+    Object.assign(morseToChar, MORSE_DICT);
+  }
+
+  // Get calibration thresholds
+  const dotCal = calibrationSymbols?.find((s) => s.character === "DOT");
+  const dashCal = calibrationSymbols?.find((s) => s.character === "DASH");
+  const useCalibration = !!(dotCal && dashCal);
 
   for (let i = 0; i < data.length; i++) {
     const pt = data[i];
     const isActive = pt.sound_freq_hz > 0;
 
     if (isActive && !inStimulus) {
-      // Entering stimulus period
       inStimulus = true;
       currentFreq = pt.sound_freq_hz;
+      stimStart = pt.time_s;
       spikeCount = pt.od600 >= od600Threshold ? 1 : 0;
     } else if (isActive && inStimulus) {
       if (pt.od600 >= od600Threshold) spikeCount++;
     } else if (!isActive && inStimulus) {
-      // Exiting stimulus period — classify
       if (spikeCount > 0) {
-        if (currentFreq <= 500) {
-          symbols.push("·"); // DOT for low-frequency
+        if (useCalibration) {
+          const duration = pt.time_s - stimStart;
+          if (duration >= dotCal!.min_duration_s && duration <= dotCal!.max_duration_s) {
+            symbols.push("·");
+          } else if (duration >= dashCal!.min_duration_s && duration <= dashCal!.max_duration_s) {
+            symbols.push("−");
+          } else {
+            // Fallback to frequency-based
+            symbols.push(currentFreq <= 500 ? "·" : "−");
+          }
         } else {
-          symbols.push("−"); // DASH for high-frequency
+          symbols.push(currentFreq <= 500 ? "·" : "−");
         }
       } else {
-        symbols.push(" "); // gap / no response
+        symbols.push(" ");
       }
       inStimulus = false;
       spikeCount = 0;
     }
   }
 
-  // Handle case where data ends during stimulus
   if (inStimulus && spikeCount > 0) {
-    symbols.push(currentFreq <= 500 ? "·" : "−");
+    if (useCalibration) {
+      const duration = (data[data.length - 1]?.time_s ?? 0) - stimStart;
+      if (duration >= dotCal!.min_duration_s && duration <= dotCal!.max_duration_s) {
+        symbols.push("·");
+      } else {
+        symbols.push("−");
+      }
+    } else {
+      symbols.push(currentFreq <= 500 ? "·" : "−");
+    }
   }
 
-  return { symbols, decoded: symbols.join("") };
+  // Group symbols into letters (split by spaces)
+  const letters: { char: string; morse: string }[] = [];
+  let currentMorse = "";
+  for (const sym of symbols) {
+    if (sym === " ") {
+      if (currentMorse) {
+        const morseKey = currentMorse.replace(/·/g, ".").replace(/−/g, "-");
+        letters.push({ char: morseToChar[morseKey] || "?", morse: currentMorse });
+        currentMorse = "";
+      }
+    } else {
+      currentMorse += sym;
+    }
+  }
+  if (currentMorse) {
+    const morseKey = currentMorse.replace(/·/g, ".").replace(/−/g, "-");
+    letters.push({ char: morseToChar[morseKey] || "?", morse: currentMorse });
+  }
+
+  return { symbols, decoded: symbols.join(""), letters };
 }

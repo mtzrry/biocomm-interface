@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Play, Pause, RotateCcw, Upload, Download, Activity, Droplets, Eye, FileUp } from "lucide-react";
+import { Play, Pause, RotateCcw, Upload, Download, Activity, Droplets, Eye, FileUp, Volume2, VolumeX } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, ReferenceArea, Legend
 } from "recharts";
 import {
   parseCsvToSignalData, parseScientificCsv, isScientificCsv,
-  decodeBioSignal, type CsvSignalPoint, type ScientificCsvPoint
+  decodeBioSignal, type CsvSignalPoint, type ScientificCsvPoint, type DecodeResult
 } from "@/lib/csv-parser";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCalibration } from "@/contexts/CalibrationContext";
+import { useSensoryFeedback } from "@/hooks/useSensoryFeedback";
 
 interface Props {
   researcherName: string;
@@ -19,6 +21,14 @@ interface Props {
 const TARGET_WORD = "UNDIP";
 const THRESHOLD = 0.6;
 
+const MORSE_MAP: Record<string, string> = {
+  A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.",
+  G: "--.", H: "....", I: "..", J: ".---", K: "-.-", L: ".-..",
+  M: "--", N: "-.", O: "---", P: ".--.", Q: "--.-", R: ".-.",
+  S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-",
+  Y: "-.--", Z: "--..",
+};
+
 function generateSignalPoint(tick: number) {
   const base = Math.sin(tick * 0.15) * 0.3 + 0.5;
   const noise = (Math.random() - 0.5) * 0.15;
@@ -27,18 +37,23 @@ function generateSignalPoint(tick: number) {
 
 export default function DecoderView({ researcherName, institution }: Props) {
   const { t } = useLanguage();
+  const calibration = useCalibration();
+  const [sensoryEnabled, setSensoryEnabled] = useState(true);
+  const { playBeep } = useSensoryFeedback(sensoryEnabled);
   const [running, setRunning] = useState(false);
   const [tick, setTick] = useState(0);
   const [data, setData] = useState<CsvSignalPoint[]>([]);
   const [sciData, setSciData] = useState<ScientificCsvPoint[]>([]);
   const [isScientific, setIsScientific] = useState(false);
   const [decodedChars, setDecodedChars] = useState<string[]>([]);
+  const [decodeResult, setDecodeResult] = useState<DecodeResult | null>(null);
   const [logs, setLogs] = useState<string[]>([t("logInit"), t("logAwaiting")]);
   const [targetSeq, setTargetSeq] = useState(TARGET_WORD);
   const [csvLoaded, setCsvLoaded] = useState(false);
   const [csvFileName, setCsvFileName] = useState("");
   const logRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevDecodedLen = useRef(0);
 
   const ph = (7.2 - tick * 0.003).toFixed(2);
   const od600 = (0.05 + tick * 0.004).toFixed(3);
@@ -47,6 +62,25 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const addLog = useCallback((msg: string) => {
     setLogs((prev) => [...prev.slice(-50), msg]);
   }, []);
+
+  // Sensory feedback on new decoded symbols
+  useEffect(() => {
+    if (isScientific && decodeResult) {
+      const newLen = decodeResult.symbols.length;
+      if (newLen > prevDecodedLen.current) {
+        const lastSym = decodeResult.symbols[newLen - 1];
+        if (lastSym === "·") playBeep("dot");
+        else if (lastSym === "−") playBeep("dash");
+      }
+      prevDecodedLen.current = newLen;
+    } else if (!isScientific) {
+      const newLen = decodedChars.length;
+      if (newLen > prevDecodedLen.current) {
+        playBeep("dot"); // simulation mode beep
+      }
+      prevDecodedLen.current = newLen;
+    }
+  }, [decodeResult, decodedChars, isScientific, playBeep]);
 
   const stimulusAreas = useCallback(() => {
     if (!isScientific || sciData.length === 0) return [];
@@ -90,13 +124,24 @@ export default function DecoderView({ researcherName, institution }: Props) {
           setRunning(false);
           setTick(parsed.length);
 
-          const { symbols, decoded } = decodeBioSignal(parsed);
-          setDecodedChars(symbols);
+          const result = decodeBioSignal(
+            parsed, 0.3,
+            calibration.loaded ? calibration.symbols : undefined,
+            calibration.loaded ? calibration.dictionary : undefined
+          );
+          setDecodeResult(result);
+          setDecodedChars(result.symbols);
 
           addLog(`[CSV] Scientific format detected: "${file.name}" — ${parsed.length} points.`);
           addLog(`[CSV] pH range: ${Math.min(...parsed.map((d) => d.ph_level)).toFixed(2)} – ${Math.max(...parsed.map((d) => d.ph_level)).toFixed(2)}`);
           addLog(`[CSV] OD600 range: ${Math.min(...parsed.map((d) => d.od600)).toFixed(3)} – ${Math.max(...parsed.map((d) => d.od600)).toFixed(3)}`);
-          addLog(`[DEC] Morse decode: ${decoded || "(no signal detected)"}`);
+          addLog(`[DEC] Morse decode: ${result.decoded || "(no signal detected)"}`);
+          if (result.letters.length > 0) {
+            addLog(`[DEC] Letters: ${result.letters.map((l) => l.char).join(" ")}`);
+          }
+          if (calibration.loaded) {
+            addLog(`[CAL] Using calibration model: ${calibration.fileName}`);
+          }
           const stimCount = parsed.filter((p) => p.sound_freq_hz > 0).length;
           addLog(`[SIG] Stimulus periods: ${stimCount} active samples`);
         } else {
@@ -112,6 +157,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
           setCsvFileName(file.name);
           setRunning(false);
           setTick(parsed.length);
+          setDecodeResult(null);
           addLog(`[CSV] Legacy format loaded: "${file.name}" — ${parsed.length} data points.`);
           addLog(`[CSV] Signal range: ${Math.min(...parsed.map((d) => d.signal)).toFixed(3)} – ${Math.max(...parsed.map((d) => d.signal)).toFixed(3)}`);
         }
@@ -119,7 +165,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
       reader.readAsText(file);
       e.target.value = "";
     },
-    [addLog]
+    [addLog, calibration]
   );
 
   useEffect(() => {
@@ -169,8 +215,10 @@ export default function DecoderView({ researcherName, institution }: Props) {
     setSciData([]);
     setIsScientific(false);
     setDecodedChars([]);
+    setDecodeResult(null);
     setCsvLoaded(false);
     setCsvFileName("");
+    prevDecodedLen.current = 0;
     setLogs([t("logReset"), t("logAwaiting")]);
   };
 
@@ -184,8 +232,10 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const displayOd = isScientific && sciData.length > 0 ? sciData[sciData.length - 1].od600.toFixed(3) : od600;
   const displayColor = isScientific && sciData.length > 0 ? sciData[sciData.length - 1].color_intensity.toFixed(1) : colorIntensity;
 
-  const displayDecoded = isScientific ? decodedChars : decodedChars;
-  const displayTarget = isScientific ? decodedChars.join("") || "..." : targetSeq;
+  // Build dual output (letter + morse) for display
+  const dualOutput = isScientific && decodeResult
+    ? decodeResult.letters
+    : decodedChars.map((ch) => ({ char: ch, morse: MORSE_MAP[ch] || "?" }));
 
   return (
     <div className="min-h-screen pt-20 pb-10 px-3 sm:px-6">
@@ -197,6 +247,19 @@ export default function DecoderView({ researcherName, institution }: Props) {
             <p className="text-xs text-muted-foreground font-mono-sci">BIO-DIGITAL TRANSDUCER v2.0</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Sensory toggle */}
+            <button
+              onClick={() => setSensoryEnabled(!sensoryEnabled)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                sensoryEnabled
+                  ? "border-primary/30 text-primary bg-primary/10"
+                  : "border-border text-muted-foreground"
+              }`}
+              title={t("sensoryFeedback")}
+            >
+              {sensoryEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              {t("sensoryFeedback")}: {sensoryEnabled ? t("sensoryOn") : t("sensoryOff")}
+            </button>
             {csvLoaded && (
               <div className="glass-panel rounded-full px-3 py-1.5 text-xs font-mono-sci text-accent">
                 <FileUp className="w-3 h-3 inline mr-1" />
@@ -290,39 +353,43 @@ export default function DecoderView({ researcherName, institution }: Props) {
               </div>
             </div>
 
-            {/* Decoded output */}
+            {/* Dual Decoded Output */}
             <div className="glass-panel-strong rounded-xl p-5 text-center">
-              <p className="text-xs text-muted-foreground mb-2 font-mono-sci">
-                {isScientific ? t("morseDecodeLabel") : t("decodedOutput")}
+              <p className="text-xs text-muted-foreground mb-1 font-mono-sci">
+                {t("decodedResultLabel")}
               </p>
-              <div className="flex justify-center gap-2 flex-wrap">
-                {isScientific ? (
-                  displayDecoded.length > 0 ? displayDecoded.map((sym, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="w-10 h-12 flex items-center justify-center rounded-lg border border-border text-xl font-bold font-mono-sci text-foreground bg-muted/50"
-                    >
-                      {sym}
-                    </motion.span>
-                  )) : (
-                    <span className="text-muted-foreground text-sm font-mono-sci">{t("noStimulus")}</span>
-                  )
-                ) : (
-                  targetSeq.split("").map((char, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={i < decodedChars.length ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0.2 }}
-                      className="w-12 h-14 flex items-center justify-center rounded-lg border border-border text-xl font-bold font-mono-sci text-foreground bg-muted/50"
-                    >
-                      {i < decodedChars.length ? decodedChars[i] : "?"}
-                    </motion.span>
-                  ))
+              {calibration.loaded && (
+                <p className="text-[10px] text-accent mb-2 font-mono-sci">
+                  🔬 {t("calibrationLoaded")}: {calibration.fileName}
+                </p>
+              )}
+              <div className="flex justify-center gap-2 flex-wrap mb-3">
+                {dualOutput.length > 0 ? dualOutput.map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="flex flex-col items-center"
+                  >
+                    <span className="w-12 h-14 flex items-center justify-center rounded-lg border border-border text-xl font-bold font-mono-sci text-foreground bg-muted/50">
+                      {item.char}
+                    </span>
+                    <span className="text-[10px] font-mono-sci text-accent mt-1 tracking-wider">
+                      {item.morse}
+                    </span>
+                  </motion.div>
+                )) : (
+                  <span className="text-muted-foreground text-sm font-mono-sci">
+                    {isScientific ? t("noStimulus") : "—"}
+                  </span>
                 )}
               </div>
+              {dualOutput.length > 0 && (
+                <p className="text-[10px] text-muted-foreground font-mono-sci">
+                  {t("morseRepresentation")}: {dualOutput.map((d) => d.morse).join(" | ")}
+                </p>
+              )}
             </div>
           </div>
 
@@ -333,7 +400,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
               <p className="text-xs opacity-60 mb-2">// {t("systemLog").toUpperCase()}</p>
               <div ref={logRef} className="flex-1 overflow-y-auto text-xs leading-relaxed space-y-0.5 scrollbar-thin">
                 {logs.map((l, i) => (
-                  <div key={i} className={l.startsWith("[CSV]") ? "text-emerald-400" : l.startsWith("[ERR]") ? "text-red-400" : l.startsWith("[DEC]") ? "text-cyan-400" : "opacity-80"}>
+                  <div key={i} className={l.startsWith("[CSV]") ? "text-emerald-400" : l.startsWith("[ERR]") ? "text-red-400" : l.startsWith("[DEC]") ? "text-cyan-400" : l.startsWith("[CAL]") ? "text-yellow-400" : "opacity-80"}>
                     {l}
                   </div>
                 ))}
