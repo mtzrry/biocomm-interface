@@ -189,7 +189,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
 
   // === STREAMING ENGINE ===
   const processTickDecode = useCallback((pt: ScientificCsvPoint) => {
-    const isHigh = pt.sound_freq_hz > 0 || pt.od600 >= 0.3;
+    const isHigh = pt.sound_freq_hz > 0 || pt.od600 > 0.35;
 
     if (isHigh) {
       highCountRef.current++;
