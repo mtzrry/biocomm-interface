@@ -649,7 +649,92 @@ export default function DecoderView({ researcherName, institution }: Props) {
               <p className="text-xs text-muted-foreground font-mono-sci text-center">
                 {t("csvFormat")}
               </p>
-            </div>
+
+              {/* Manual Text-to-Signal Simulator */}
+              <div className="border-t border-border pt-3 mt-1 space-y-2">
+                <label className="text-xs text-muted-foreground font-mono-sci block">Simulasi Manual</label>
+                <input
+                  type="text"
+                  value={manualText}
+                  onChange={(e) => setManualText(e.target.value.toUpperCase())}
+                  placeholder="Ketik teks manual (contoh: RAGI)"
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm font-mono-sci placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  disabled={streamStatus === "streaming"}
+                />
+                <button
+                  onClick={() => {
+                    if (!manualText.trim()) return;
+                    const data: ScientificCsvPoint[] = [];
+                    let t_s = 0;
+                    const LOW: ScientificCsvPoint = { time_s: 0, sound_freq_hz: 0, ph_level: 7.0, od600: 0.05, color_intensity: 2.0 };
+                    const pushLow = (n: number) => { for (let i = 0; i < n; i++) { data.push({ ...LOW, time_s: t_s }); t_s += 5; } };
+                    const pushHigh = (n: number, freq: number, od: number, ph: number) => { for (let i = 0; i < n; i++) { data.push({ time_s: t_s, sound_freq_hz: freq, ph_level: ph, od600: od, color_intensity: od * 40 }); t_s += 5; } };
+
+                    const words = manualText.trim().split(/\s+/);
+                    pushLow(2); // lead-in
+                    words.forEach((word, wi) => {
+                      if (wi > 0) pushLow(7); // word gap
+                      [...word].forEach((ch, ci) => {
+                        if (ci > 0) pushLow(4); // letter gap
+                        const morse = MORSE_MAP[ch];
+                        if (!morse) return;
+                        [...morse].forEach((sym, si) => {
+                          if (si > 0) pushLow(1); // symbol gap
+                          if (sym === ".") pushHigh(2, 100, 0.8, 6.2);
+                          else pushHigh(4, 10000, 0.9, 6.0);
+                        });
+                      });
+                    });
+                    pushLow(7); // tail
+
+                    handleReset();
+                    setTimeout(() => {
+                      setPendingData(data);
+                      setCsvLoaded(true);
+                      setCsvFileName(`SIM:${manualText.trim()}`);
+                      addLog(`[SIM] Generated ${data.length} ticks for "${manualText.trim()}"`);
+                      // Auto-start
+                      tickIndexRef.current = 0;
+                      setStreamStatus("streaming");
+                      addLog(`[SYS] Streaming STARTED (${speed} — ${SPEED_MS[speed]}ms/tick)`);
+
+                      const iv = setInterval(() => {
+                        const idx = tickIndexRef.current;
+                        if (idx >= data.length) {
+                          clearInterval(iv);
+                          intervalRef.current = null;
+                          if (morseBufferRef.current) {
+                            const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
+                            setDecodedLetters((prev) => [...prev, { char, morse: morseBufferRef.current }]);
+                            wordBufferRef.current += char;
+                            morseBufferRef.current = "";
+                          }
+                          if (wordBufferRef.current) {
+                            const w = wordBufferRef.current;
+                            setDecodedWord(w);
+                            const tr = TRANSLATION_DICT[w] || "";
+                            if (tr) setTranslatedWord(tr);
+                            wordBufferRef.current = "";
+                          }
+                          setStreamStatus("complete");
+                          addLog("[SYS] ✓ STREAM COMPLETE — SELESAI");
+                          return;
+                        }
+                        const pt = data[idx];
+                        setActiveData((prev) => [...prev, pt]);
+                        processTickDecode(pt);
+                        tickIndexRef.current = idx + 1;
+                      }, SPEED_MS[speed]);
+                      intervalRef.current = iv;
+                    }, 100);
+                  }}
+                  disabled={streamStatus === "streaming" || !manualText.trim()}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg bg-accent text-accent-foreground text-xs font-medium disabled:opacity-40 hover:opacity-90 transition-colors"
+                >
+                  <Play className="w-3.5 h-3.5" />
+                  Simulasikan Sinyal
+                </button>
+              </div>
           </div>
         </div>
       </div>
