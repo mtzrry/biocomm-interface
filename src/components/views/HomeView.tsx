@@ -32,7 +32,6 @@ export default function HomeView({ onLaunch }: Props) {
           <p className="font-mono-sci text-xs md:text-sm tracking-[0.3em] text-primary mb-4 uppercase">
             Micorse v1.0 — Microorganism Morse Code Biotranslator
           </p>
-          </p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground leading-tight mb-6">
             {t("heroTitle1")}<br />
             <span className="text-gradient-bio">{t("heroTitle2")}</span><br />
