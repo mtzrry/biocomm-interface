@@ -80,6 +80,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const [decodedLetters, setDecodedLetters] = useState<{ char: string; morse: string }[]>([]);
   const [decodedWord, setDecodedWord] = useState("");
   const [translatedWord, setTranslatedWord] = useState("");
+  const [manualText, setManualText] = useState("");
   const highCountRef = useRef(0);
   const lowCountRef = useRef(0);
   const morseBufferRef = useRef("");
