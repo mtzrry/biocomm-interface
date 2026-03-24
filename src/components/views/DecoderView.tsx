@@ -735,6 +735,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
                   Simulasikan Sinyal
                 </button>
               </div>
+            </div>
           </div>
         </div>
       </div>
