@@ -9,6 +9,7 @@ import HomeView from "@/components/views/HomeView";
 import DecoderView from "@/components/views/DecoderView";
 import TeamView from "@/components/views/TeamView";
 import PaperView from "@/components/views/PaperView";
+import { Toaster } from "@/components/ui/toaster";
 
 type View = "home" | "decoder" | "team" | "paper";
 
@@ -46,6 +47,7 @@ export default function Index() {
             />
 
             <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+            <Toaster />
           </div>
         </CalibrationProvider>
       </LanguageProvider>

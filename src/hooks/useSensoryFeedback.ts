@@ -15,7 +15,6 @@ export function useSensoryFeedback(enabled: boolean) {
       if (!enabled) return;
       const duration = type === "dot" ? 0.1 : 0.3;
 
-      // Audio
       try {
         const ctx = getAudioCtx();
         const osc = ctx.createOscillator();
@@ -32,7 +31,6 @@ export function useSensoryFeedback(enabled: boolean) {
         // Web Audio not supported
       }
 
-      // Haptics
       try {
         navigator.vibrate?.(type === "dot" ? 100 : 300);
       } catch {
@@ -42,5 +40,23 @@ export function useSensoryFeedback(enabled: boolean) {
     [enabled, getAudioCtx]
   );
 
-  return { playBeep };
+  const speakText = useCallback(
+    (text: string) => {
+      if (!enabled) return;
+      try {
+        // Race condition fix: cancel any pending speech
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "id-ID";
+        utterance.rate = 0.9;
+        utterance.volume = 0.8;
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        // TTS not supported
+      }
+    },
+    [enabled]
+  );
+
+  return { playBeep, speakText };
 }

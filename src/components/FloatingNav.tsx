@@ -29,7 +29,7 @@ export default function FloatingNav({ currentView, setView, onResearcherAccess, 
       <div className="glass-nav rounded-full px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
           <FlaskConical className="w-5 h-5 text-primary" />
-          <span className="hidden sm:inline font-mono-sci text-xs tracking-wider">BDT v2.0</span>
+          <span className="hidden sm:inline font-mono-sci text-xs tracking-wider">Micorse v1.0</span>
         </div>
 
         <div className="hidden md:flex items-center gap-1">
