@@ -1,25 +1,29 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 
-export interface CalibrationSymbol {
-  character: string; // "DOT" | "DASH"
-  min_duration_s: number;
-  max_duration_s: number;
-  avg_ph_drop: number;
-  avg_od_spike: number;
+export interface OrganismProfile {
+  organism_name: string;
+  type: string;
+  baseline_ph: number;
+  baseline_od: number;
+  threshold_od: number;
 }
 
-export interface CalibrationDictEntry {
-  character: string; // "A", "B", etc.
-  morse_code: string; // ".-"
-}
+// Default: Saccharomyces cerevisiae
+const DEFAULT_PROFILE: OrganismProfile = {
+  organism_name: "Saccharomyces cerevisiae",
+  type: "yeast",
+  baseline_ph: 7.0,
+  baseline_od: 0.3,
+  threshold_od: 0.6,
+};
 
 interface CalibrationState {
-  symbols: CalibrationSymbol[];
-  dictionary: CalibrationDictEntry[];
+  profile: OrganismProfile;
   loaded: boolean;
   fileName: string;
-  setCalibration: (symbols: CalibrationSymbol[], dictionary: CalibrationDictEntry[], fileName: string) => void;
-  clearCalibration: () => void;
+  setProfile: (profile: OrganismProfile, fileName: string) => void;
+  updateParam: (key: keyof Pick<OrganismProfile, "baseline_ph" | "baseline_od" | "threshold_od">, value: number) => void;
+  clearProfile: () => void;
 }
 
 const CalibrationContext = createContext<CalibrationState | null>(null);
@@ -30,72 +34,67 @@ export function useCalibration() {
   return ctx;
 }
 
-export function parseCalibrationCsv(csvText: string): {
-  symbols: CalibrationSymbol[];
-  dictionary: CalibrationDictEntry[];
-} {
+const ORGANISM_HEADERS = ["organism_name", "type", "baseline_ph", "baseline_od", "threshold_od"];
+
+export function parseOrganismCsv(csvText: string): OrganismProfile | null {
   const lines = csvText.trim().split("\n");
-  if (lines.length < 2) return { symbols: [], dictionary: [] };
+  if (lines.length < 2) return null;
 
   const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
-  const expectedCols = ["type", "character", "morse_code", "min_duration_s", "max_duration_s", "avg_ph_drop", "avg_od_spike"];
   const colMap: Record<string, number> = {};
 
-  for (const col of expectedCols) {
+  for (const col of ORGANISM_HEADERS) {
     const idx = header.indexOf(col);
-    if (idx === -1) return { symbols: [], dictionary: [] };
+    if (idx === -1) return null;
     colMap[col] = idx;
   }
 
-  const symbols: CalibrationSymbol[] = [];
-  const dictionary: CalibrationDictEntry[] = [];
+  const cols = lines[1].split(",").map((c) => c.trim());
+  if (cols.length < ORGANISM_HEADERS.length) return null;
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",").map((c) => c.trim());
-    if (cols.length < expectedCols.length) continue;
+  const baseline_ph = parseFloat(cols[colMap["baseline_ph"]]);
+  const baseline_od = parseFloat(cols[colMap["baseline_od"]]);
+  const threshold_od = parseFloat(cols[colMap["threshold_od"]]);
 
-    const type = cols[colMap["type"]].toLowerCase();
-    const character = cols[colMap["character"]].toUpperCase();
-    const morse_code = cols[colMap["morse_code"]];
+  if ([baseline_ph, baseline_od, threshold_od].some((v) => isNaN(v))) return null;
 
-    if (type === "symbol") {
-      symbols.push({
-        character,
-        min_duration_s: parseFloat(cols[colMap["min_duration_s"]]),
-        max_duration_s: parseFloat(cols[colMap["max_duration_s"]]),
-        avg_ph_drop: parseFloat(cols[colMap["avg_ph_drop"]]),
-        avg_od_spike: parseFloat(cols[colMap["avg_od_spike"]]),
-      });
-    } else if (type === "dictionary") {
-      dictionary.push({ character, morse_code });
-    }
-  }
+  return {
+    organism_name: cols[colMap["organism_name"]],
+    type: cols[colMap["type"]],
+    baseline_ph,
+    baseline_od,
+    threshold_od,
+  };
+}
 
-  return { symbols, dictionary };
+export function isOrganismCsv(csvText: string): boolean {
+  const firstLine = csvText.trim().split("\n")[0]?.toLowerCase() || "";
+  return ORGANISM_HEADERS.every((h) => firstLine.includes(h));
 }
 
 export function CalibrationProvider({ children }: { children: ReactNode }) {
-  const [symbols, setSymbols] = useState<CalibrationSymbol[]>([]);
-  const [dictionary, setDictionary] = useState<CalibrationDictEntry[]>([]);
+  const [profile, setProfileState] = useState<OrganismProfile>(DEFAULT_PROFILE);
   const [loaded, setLoaded] = useState(false);
   const [fileName, setFileName] = useState("");
 
-  const setCalibration = (s: CalibrationSymbol[], d: CalibrationDictEntry[], fn: string) => {
-    setSymbols(s);
-    setDictionary(d);
+  const setProfile = (p: OrganismProfile, fn: string) => {
+    setProfileState(p);
     setLoaded(true);
     setFileName(fn);
   };
 
-  const clearCalibration = () => {
-    setSymbols([]);
-    setDictionary([]);
+  const updateParam = (key: keyof Pick<OrganismProfile, "baseline_ph" | "baseline_od" | "threshold_od">, value: number) => {
+    setProfileState((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const clearProfile = () => {
+    setProfileState(DEFAULT_PROFILE);
     setLoaded(false);
     setFileName("");
   };
 
   return (
-    <CalibrationContext.Provider value={{ symbols, dictionary, loaded, fileName, setCalibration, clearCalibration }}>
+    <CalibrationContext.Provider value={{ profile, loaded, fileName, setProfile, updateParam, clearProfile }}>
       {children}
     </CalibrationContext.Provider>
   );
