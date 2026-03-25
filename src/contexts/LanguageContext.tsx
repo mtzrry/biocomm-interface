@@ -196,6 +196,7 @@ const translations = {
     clinical: "UI Klinis",
     academic: "UI Akademik",
     fontNote: "JetBrains Mono tetap digunakan untuk semua data numerik/terminal.",
+    accentColor: "Warna Aksen",
     researcherIdentity: "Identitas Peneliti",
     researcherModalDesc: "Masukkan kredensial Anda untuk mempersonalisasi antarmuka.",
     fullName: "Nama Lengkap",
