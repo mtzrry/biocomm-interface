@@ -1,4 +1,4 @@
-import type { CalibrationSymbol, CalibrationDictEntry } from "@/contexts/CalibrationContext";
+import type { OrganismProfile } from "@/contexts/CalibrationContext";
 
 export interface CsvSignalPoint {
   t: number;
