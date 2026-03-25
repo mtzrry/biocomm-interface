@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sun, Moon, Type, ALargeSmall, Globe } from "lucide-react";
-import { useSettings, type Theme, type FontSize, type FontFamily } from "@/contexts/SettingsContext";
+import { X, Sun, Moon, Type, ALargeSmall, Globe, Palette } from "lucide-react";
+import { useSettings, type Theme, type FontSize, type FontFamily, type AccentTheme } from "@/contexts/SettingsContext";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function SettingsPanel({ open, onClose }: Props) {
-  const { theme, fontSize, fontFamily, setTheme, setFontSize, setFontFamily } = useSettings();
+  const { theme, fontSize, fontFamily, accentTheme, setTheme, setFontSize, setFontFamily, setAccentTheme } = useSettings();
   const { language, setLanguage, t } = useLanguage();
 
   const themes: { value: Theme; label: string; icon: typeof Sun; desc: string }[] = [
@@ -31,6 +31,12 @@ export default function SettingsPanel({ open, onClose }: Props) {
   const languages: { value: Language; label: string; flag: string }[] = [
     { value: "en", label: "English (EN)", flag: "🇬🇧" },
     { value: "id", label: "Bahasa Indonesia (ID)", flag: "🇮🇩" },
+  ];
+
+  const accents: { value: AccentTheme; label: string; color: string; ring: string }[] = [
+    { value: "emerald", label: "Emerald", color: "bg-emerald-500", ring: "ring-emerald-500" },
+    { value: "blue", label: "Ocean", color: "bg-blue-500", ring: "ring-blue-500" },
+    { value: "rose", label: "Rose", color: "bg-rose-500", ring: "ring-rose-500" },
   ];
 
   return (
@@ -78,12 +84,12 @@ export default function SettingsPanel({ open, onClose }: Props) {
               </div>
             </div>
 
-            {/* Theme */}
+            {/* Theme + Accent */}
             <div className="mb-5">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
                 <Sun className="w-3 h-3 inline mr-1.5" />{t("theme")}
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 {themes.map((th) => (
                   <button
                     key={th.value}
@@ -99,6 +105,27 @@ export default function SettingsPanel({ open, onClose }: Props) {
                       <div className="text-xs font-medium">{th.label}</div>
                       <div className="text-[10px] opacity-60">{th.desc}</div>
                     </div>
+                  </button>
+                ))}
+              </div>
+              {/* Accent Picker */}
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
+                <Palette className="w-3 h-3 inline mr-1.5" />{t("accentColor")}
+              </label>
+              <div className="flex items-center gap-3">
+                {accents.map((a) => (
+                  <button
+                    key={a.value}
+                    onClick={() => setAccentTheme(a.value)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all ${
+                      accentTheme === a.value
+                        ? `border-2 ${a.ring} ring-1 ${a.ring} bg-muted`
+                        : "border-border hover:border-primary/40"
+                    }`}
+                    title={a.label}
+                  >
+                    <div className={`w-5 h-5 rounded-full ${a.color} shadow-sm`} />
+                    <span className="text-xs font-medium text-foreground">{a.label}</span>
                   </button>
                 ))}
               </div>
@@ -152,7 +179,6 @@ export default function SettingsPanel({ open, onClose }: Props) {
                 {t("fontNote")}
               </p>
             </div>
-
 
           </motion.div>
         </motion.div>
