@@ -101,6 +101,7 @@ const translations = {
     clinical: "Clinical UI",
     academic: "Academic UI",
     fontNote: "JetBrains Mono remains fixed for all numeric/terminal data.",
+    accentColor: "Accent Color",
     // Researcher modal
     researcherIdentity: "Researcher Identity",
     researcherModalDesc: "Enter your credentials to personalize the interface.",
