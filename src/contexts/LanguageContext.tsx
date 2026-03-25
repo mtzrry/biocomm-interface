@@ -101,6 +101,7 @@ const translations = {
     clinical: "Clinical UI",
     academic: "Academic UI",
     fontNote: "JetBrains Mono remains fixed for all numeric/terminal data.",
+    accentColor: "Accent Color",
     // Researcher modal
     researcherIdentity: "Researcher Identity",
     researcherModalDesc: "Enter your credentials to personalize the interface.",
@@ -195,6 +196,7 @@ const translations = {
     clinical: "UI Klinis",
     academic: "UI Akademik",
     fontNote: "JetBrains Mono tetap digunakan untuk semua data numerik/terminal.",
+    accentColor: "Warna Aksen",
     researcherIdentity: "Identitas Peneliti",
     researcherModalDesc: "Masukkan kredensial Anda untuk mempersonalisasi antarmuka.",
     fullName: "Nama Lengkap",
