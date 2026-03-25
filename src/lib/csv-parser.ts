@@ -103,39 +103,24 @@ export function isScientificCsv(csvText: string): boolean {
 }
 
 export interface DecodeResult {
-  symbols: string[];  // "·" or "−" or " "
+  symbols: string[];
   decoded: string;
   letters: { char: string; morse: string }[];
 }
 
 /** Decode bio-signal from scientific data.
- *  Supports optional calibration model for dynamic thresholds. */
+ *  Supports optional organism profile for dynamic thresholds. */
 export function decodeBioSignal(
   data: ScientificCsvPoint[],
   od600Threshold: number = 0.3,
-  calibrationSymbols?: CalibrationSymbol[],
-  calibrationDict?: CalibrationDictEntry[]
+  _profile?: OrganismProfile
 ): DecodeResult {
   const symbols: string[] = [];
   let inStimulus = false;
   let currentFreq = 0;
   let spikeCount = 0;
-  let stimStart = -1;
 
-  // Build lookup from calibration dictionary
-  const morseToChar: Record<string, string> = {};
-  if (calibrationDict && calibrationDict.length > 0) {
-    for (const entry of calibrationDict) {
-      morseToChar[entry.morse_code] = entry.character;
-    }
-  } else {
-    Object.assign(morseToChar, MORSE_DICT);
-  }
-
-  // Get calibration thresholds
-  const dotCal = calibrationSymbols?.find((s) => s.character === "DOT");
-  const dashCal = calibrationSymbols?.find((s) => s.character === "DASH");
-  const useCalibration = !!(dotCal && dashCal);
+  const threshold = _profile?.threshold_od ?? od600Threshold;
 
   for (let i = 0; i < data.length; i++) {
     const pt = data[i];
@@ -144,25 +129,12 @@ export function decodeBioSignal(
     if (isActive && !inStimulus) {
       inStimulus = true;
       currentFreq = pt.sound_freq_hz;
-      stimStart = pt.time_s;
-      spikeCount = pt.od600 >= od600Threshold ? 1 : 0;
+      spikeCount = pt.od600 >= threshold ? 1 : 0;
     } else if (isActive && inStimulus) {
-      if (pt.od600 >= od600Threshold) spikeCount++;
+      if (pt.od600 >= threshold) spikeCount++;
     } else if (!isActive && inStimulus) {
       if (spikeCount > 0) {
-        if (useCalibration) {
-          const duration = pt.time_s - stimStart;
-          if (duration >= dotCal!.min_duration_s && duration <= dotCal!.max_duration_s) {
-            symbols.push("·");
-          } else if (duration >= dashCal!.min_duration_s && duration <= dashCal!.max_duration_s) {
-            symbols.push("−");
-          } else {
-            // Fallback to frequency-based
-            symbols.push(currentFreq <= 500 ? "·" : "−");
-          }
-        } else {
-          symbols.push(currentFreq <= 500 ? "·" : "−");
-        }
+        symbols.push(currentFreq <= 500 ? "·" : "−");
       } else {
         symbols.push(" ");
       }
@@ -172,26 +144,17 @@ export function decodeBioSignal(
   }
 
   if (inStimulus && spikeCount > 0) {
-    if (useCalibration) {
-      const duration = (data[data.length - 1]?.time_s ?? 0) - stimStart;
-      if (duration >= dotCal!.min_duration_s && duration <= dotCal!.max_duration_s) {
-        symbols.push("·");
-      } else {
-        symbols.push("−");
-      }
-    } else {
-      symbols.push(currentFreq <= 500 ? "·" : "−");
-    }
+    symbols.push(currentFreq <= 500 ? "·" : "−");
   }
 
-  // Group symbols into letters (split by spaces)
+  // Group symbols into letters
   const letters: { char: string; morse: string }[] = [];
   let currentMorse = "";
   for (const sym of symbols) {
     if (sym === " ") {
       if (currentMorse) {
         const morseKey = currentMorse.replace(/·/g, ".").replace(/−/g, "-");
-        letters.push({ char: morseToChar[morseKey] || "?", morse: currentMorse });
+        letters.push({ char: MORSE_DICT[morseKey] || "?", morse: currentMorse });
         currentMorse = "";
       }
     } else {
@@ -200,7 +163,7 @@ export function decodeBioSignal(
   }
   if (currentMorse) {
     const morseKey = currentMorse.replace(/·/g, ".").replace(/−/g, "-");
-    letters.push({ char: morseToChar[morseKey] || "?", morse: currentMorse });
+    letters.push({ char: MORSE_DICT[morseKey] || "?", morse: currentMorse });
   }
 
   return { symbols, decoded: symbols.join(""), letters };

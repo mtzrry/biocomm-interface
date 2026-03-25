@@ -132,42 +132,7 @@ export default function SettingsPanel({ open, onClose }: Props) {
               </p>
             </div>
 
-            {/* Calibration CSV Upload */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block font-mono-sci">
-                <FlaskConical className="w-3 h-3 inline mr-1.5" />{t("calibrationModel")}
-              </label>
-              <input ref={calFileRef} type="file" accept=".csv" className="hidden" onChange={handleCalibrationUpload} />
-              {calibration.loaded ? (
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-mono-sci text-primary font-medium truncate max-w-[200px]">
-                      {calibration.fileName}
-                    </span>
-                    <button
-                      onClick={calibration.clearCalibration}
-                      className="text-destructive hover:text-destructive/80 transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground font-mono-sci">
-                    {calibration.symbols.length} {t("calibrationSymbols")} · {calibration.dictionary.length} {t("calibrationDictEntries")}
-                  </p>
-                </div>
-              ) : (
-                <button
-                  onClick={() => calFileRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-primary/40 text-primary text-xs font-medium hover:bg-primary/5 transition-colors"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  {t("uploadCalibration")}
-                </button>
-              )}
-              <p className="text-[10px] text-muted-foreground mt-2 font-mono-sci text-center">
-                {t("calibrationFormat")}
-              </p>
-            </div>
+
           </motion.div>
         </motion.div>
       )}
