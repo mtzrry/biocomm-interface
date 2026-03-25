@@ -1,9 +1,7 @@
-import { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sun, Moon, Type, ALargeSmall, Globe, Upload, Trash2, FlaskConical } from "lucide-react";
+import { X, Sun, Moon, Type, ALargeSmall, Globe } from "lucide-react";
 import { useSettings, type Theme, type FontSize, type FontFamily } from "@/contexts/SettingsContext";
 import { useLanguage, type Language } from "@/contexts/LanguageContext";
-import { useCalibration, parseCalibrationCsv } from "@/contexts/CalibrationContext";
 
 interface Props {
   open: boolean;
