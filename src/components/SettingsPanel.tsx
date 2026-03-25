@@ -12,6 +12,27 @@ export default function SettingsPanel({ open, onClose }: Props) {
   const { theme, fontSize, fontFamily, setTheme, setFontSize, setFontFamily } = useSettings();
   const { language, setLanguage, t } = useLanguage();
 
+  const themes: { value: Theme; label: string; icon: typeof Sun; desc: string }[] = [
+    { value: "light", label: t("cleanBioTech"), icon: Sun, desc: t("mintSlateClinical") },
+    { value: "dark", label: t("cyberpunkBio"), icon: Moon, desc: t("darkNeonLab") },
+  ];
+
+  const sizes: { value: FontSize; label: string }[] = [
+    { value: "small", label: t("small") },
+    { value: "medium", label: t("medium") },
+    { value: "large", label: t("large") },
+  ];
+
+  const fonts: { value: FontFamily; label: string; desc: string }[] = [
+    { value: "inter", label: "Inter", desc: t("clinical") },
+    { value: "roboto", label: "Roboto", desc: t("academic") },
+  ];
+
+  const languages: { value: Language; label: string; flag: string }[] = [
+    { value: "en", label: "English (EN)", flag: "🇬🇧" },
+    { value: "id", label: "Bahasa Indonesia (ID)", flag: "🇮🇩" },
+  ];
+
   return (
     <AnimatePresence>
       {open && (
