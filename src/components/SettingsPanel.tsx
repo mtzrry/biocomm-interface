@@ -11,43 +11,6 @@ interface Props {
 export default function SettingsPanel({ open, onClose }: Props) {
   const { theme, fontSize, fontFamily, setTheme, setFontSize, setFontFamily } = useSettings();
   const { language, setLanguage, t } = useLanguage();
-  const calibration = useCalibration();
-  const calFileRef = useRef<HTMLInputElement>(null);
-
-  const themes: { value: Theme; label: string; icon: typeof Sun; desc: string }[] = [
-    { value: "light", label: t("cleanBioTech"), icon: Sun, desc: t("mintSlateClinical") },
-    { value: "dark", label: t("cyberpunkBio"), icon: Moon, desc: t("darkNeonLab") },
-  ];
-
-  const sizes: { value: FontSize; label: string }[] = [
-    { value: "small", label: t("small") },
-    { value: "medium", label: t("medium") },
-    { value: "large", label: t("large") },
-  ];
-
-  const fonts: { value: FontFamily; label: string; desc: string }[] = [
-    { value: "inter", label: "Inter", desc: t("clinical") },
-    { value: "roboto", label: "Roboto", desc: t("academic") },
-  ];
-
-  const languages: { value: Language; label: string; flag: string }[] = [
-    { value: "en", label: "English (EN)", flag: "🇬🇧" },
-    { value: "id", label: "Bahasa Indonesia (ID)", flag: "🇮🇩" },
-  ];
-
-  const handleCalibrationUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const { symbols, dictionary } = parseCalibrationCsv(text);
-      if (symbols.length === 0 && dictionary.length === 0) return;
-      calibration.setCalibration(symbols, dictionary, file.name);
-    };
-    reader.readAsText(file);
-    e.target.value = "";
-  };
 
   return (
     <AnimatePresence>
