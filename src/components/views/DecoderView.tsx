@@ -630,6 +630,35 @@ export default function DecoderView({ researcherName, institution }: Props) {
                 </button>
               )}
               <p className="text-[10px] text-muted-foreground font-mono-sci text-center">{t("calibrationFormat")}</p>
+
+              {/* Morse Calibration CSV */}
+              <div className="border-t border-border pt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-muted-foreground font-mono-sci uppercase tracking-wider">Kalibrasi Morse</label>
+                  <span className="text-[10px] font-mono-sci text-accent">DOT≤{dotMaxTicks} · DASH≥{dashMinTicks}</span>
+                </div>
+                <input ref={morseCalFileInputRef} type="file" accept=".csv" className="hidden" onChange={handleMorseCalUpload} />
+                {morseCalFileName ? (
+                  <div className="rounded-lg border border-accent/30 bg-accent/5 p-2 flex items-center justify-between">
+                    <p className="text-[10px] font-mono-sci text-accent truncate max-w-[180px]">📐 {morseCalFileName}</p>
+                    <button
+                      onClick={() => { setDotMaxTicks(3); setDashMinTicks(4); setMorseCalFileName(""); addLog("[CAL] Morse calibration reset to defaults (3,4)."); }}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => morseCalFileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-accent/40 text-accent text-xs font-medium hover:bg-accent/5 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Unggah Kalibrasi Morse (.csv)
+                  </button>
+                )}
+                <p className="text-[10px] text-muted-foreground font-mono-sci text-center">Format: dot_max_ticks,dash_min_ticks</p>
+              </div>
             </div>
 
             {/* SECTION B: Simulasi Sinyal */}
