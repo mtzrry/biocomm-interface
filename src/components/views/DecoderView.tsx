@@ -247,6 +247,52 @@ export default function DecoderView({ researcherName, institution }: Props) {
     [addLog, calibration, toast, t, streamStatus, activeData.length, handleReset]
   );
 
+  // === MORSE CALIBRATION CSV (dot_max_ticks, dash_min_ticks) ===
+  const handleMorseCalUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = (ev.target?.result as string) || "";
+        const lines = text.trim().split("\n").filter((l) => l.trim());
+        if (lines.length < 1) {
+          toast({ variant: "destructive", title: "Morse CSV Error", description: "File kosong.", duration: 4000 });
+          return;
+        }
+        const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
+        const dotIdx = header.indexOf("dot_max_ticks");
+        const dashIdx = header.indexOf("dash_min_ticks");
+        let dataLine: string;
+        let dMax: number, dMin: number;
+        if (dotIdx !== -1 && dashIdx !== -1 && lines.length >= 2) {
+          const cols = lines[1].split(",").map((c) => c.trim());
+          dMax = parseInt(cols[dotIdx], 10);
+          dMin = parseInt(cols[dashIdx], 10);
+        } else {
+          // Allow headerless: e.g. "3,4"
+          dataLine = lines[0];
+          const cols = dataLine.split(",").map((c) => c.trim());
+          dMax = parseInt(cols[0], 10);
+          dMin = parseInt(cols[1], 10);
+        }
+        if (!Number.isFinite(dMax) || !Number.isFinite(dMin) || dMax < 1 || dMin <= dMax) {
+          toast({ variant: "destructive", title: "Morse CSV Invalid", description: "Format: dot_max_ticks,dash_min_ticks (dash_min > dot_max)", duration: 5000 });
+          addLog("[ERR] Morse calibration rejected — invalid values.");
+          return;
+        }
+        setDotMaxTicks(dMax);
+        setDashMinTicks(dMin);
+        setMorseCalFileName(file.name);
+        toast({ title: "✓ Morse Calibration", description: `DOT ≤ ${dMax} ticks · DASH ≥ ${dMin} ticks`, duration: 4000 });
+        addLog(`[CAL] Morse thresholds updated: DOT≤${dMax}, DASH≥${dMin} (${file.name})`);
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    },
+    [addLog, toast]
+  );
+
   // === STREAMING ENGINE (DO NOT MODIFY TTS / GAP LOGIC) ===
   const processTickDecode = useCallback((pt: ScientificCsvPoint) => {
     const threshold = calibration.profile.threshold_od;
