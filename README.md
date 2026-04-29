@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Welcome to biocomm-interface
 
-TODO: Document your project here
+Micorse 1.1
