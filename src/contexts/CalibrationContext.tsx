@@ -96,9 +96,18 @@ export function isOrganismCsv(csvText: string): boolean {
 }
 
 export function CalibrationProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = useState<OrganismProfile>(DEFAULT_PROFILE);
-  const [loaded, setLoaded] = useState(false);
+  const [profile, setProfileState] = useState<OrganismProfile>(() => loadProfileFromStorage());
+  const [loaded, setLoaded] = useState(() => !!localStorage.getItem(LS_KEY_PROFILE));
   const [fileName, setFileName] = useState("");
+
+  // Auto-persist profile to localStorage on any change
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY_PROFILE, JSON.stringify(profile));
+    } catch {
+      /* ignore quota errors */
+    }
+  }, [profile]);
 
   const setProfile = (p: OrganismProfile, fn: string) => {
     setProfileState(p);
@@ -114,6 +123,11 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     setProfileState(DEFAULT_PROFILE);
     setLoaded(false);
     setFileName("");
+    try {
+      localStorage.removeItem(LS_KEY_PROFILE);
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
