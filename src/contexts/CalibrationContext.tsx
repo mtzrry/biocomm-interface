@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
 export interface OrganismProfile {
   organism_name: string;
@@ -16,6 +16,29 @@ const DEFAULT_PROFILE: OrganismProfile = {
   baseline_od: 0.3,
   threshold_od: 0.6,
 };
+
+const LS_KEY_PROFILE = "micorse-calibration-profile";
+
+function loadProfileFromStorage(): OrganismProfile {
+  try {
+    const raw = localStorage.getItem(LS_KEY_PROFILE);
+    if (!raw) return DEFAULT_PROFILE;
+    const parsed = JSON.parse(raw);
+    const baseline_ph = parseFloat(parsed.baseline_ph);
+    const baseline_od = parseFloat(parsed.baseline_od);
+    const threshold_od = parseFloat(parsed.threshold_od);
+    if ([baseline_ph, baseline_od, threshold_od].some((v) => isNaN(v))) return DEFAULT_PROFILE;
+    return {
+      organism_name: String(parsed.organism_name ?? DEFAULT_PROFILE.organism_name),
+      type: String(parsed.type ?? DEFAULT_PROFILE.type),
+      baseline_ph,
+      baseline_od,
+      threshold_od,
+    };
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
 
 interface CalibrationState {
   profile: OrganismProfile;
@@ -73,9 +96,18 @@ export function isOrganismCsv(csvText: string): boolean {
 }
 
 export function CalibrationProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = useState<OrganismProfile>(DEFAULT_PROFILE);
-  const [loaded, setLoaded] = useState(false);
+  const [profile, setProfileState] = useState<OrganismProfile>(() => loadProfileFromStorage());
+  const [loaded, setLoaded] = useState(() => !!localStorage.getItem(LS_KEY_PROFILE));
   const [fileName, setFileName] = useState("");
+
+  // Auto-persist profile to localStorage on any change
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_KEY_PROFILE, JSON.stringify(profile));
+    } catch {
+      /* ignore quota errors */
+    }
+  }, [profile]);
 
   const setProfile = (p: OrganismProfile, fn: string) => {
     setProfileState(p);
@@ -91,6 +123,11 @@ export function CalibrationProvider({ children }: { children: ReactNode }) {
     setProfileState(DEFAULT_PROFILE);
     setLoaded(false);
     setFileName("");
+    try {
+      localStorage.removeItem(LS_KEY_PROFILE);
+    } catch {
+      /* ignore */
+    }
   };
 
   return (

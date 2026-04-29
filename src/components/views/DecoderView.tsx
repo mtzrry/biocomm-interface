@@ -87,10 +87,23 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const wordBufferRef = useRef("");
   const lastSpokenRef = useRef("");
 
-  // Morse tick calibration (dynamic via CSV)
-  const [dotMaxTicks, setDotMaxTicks] = useState(3);
-  const [dashMinTicks, setDashMinTicks] = useState(4);
+  // Morse tick calibration (dynamic via CSV) — persisted in localStorage
+  const [dotMaxTicks, setDotMaxTicks] = useState<number>(() => {
+    const v = parseFloat(localStorage.getItem("micorse-dotMaxTicks") ?? "");
+    return isNaN(v) ? 3 : v;
+  });
+  const [dashMinTicks, setDashMinTicks] = useState<number>(() => {
+    const v = parseFloat(localStorage.getItem("micorse-dashMinTicks") ?? "");
+    return isNaN(v) ? 4 : v;
+  });
   const [morseCalFileName, setMorseCalFileName] = useState("");
+
+  useEffect(() => {
+    try { localStorage.setItem("micorse-dotMaxTicks", String(dotMaxTicks)); } catch { /* ignore */ }
+  }, [dotMaxTicks]);
+  useEffect(() => {
+    try { localStorage.setItem("micorse-dashMinTicks", String(dashMinTicks)); } catch { /* ignore */ }
+  }, [dashMinTicks]);
 
   // Web Audio + Haptic helper (independent of TTS)
   const beepCtxRef = useRef<AudioContext | null>(null);
