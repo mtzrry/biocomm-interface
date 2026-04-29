@@ -87,11 +87,39 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const wordBufferRef = useRef("");
   const lastSpokenRef = useRef("");
 
+  // Morse tick calibration (dynamic via CSV)
+  const [dotMaxTicks, setDotMaxTicks] = useState(3);
+  const [dashMinTicks, setDashMinTicks] = useState(4);
+  const [morseCalFileName, setMorseCalFileName] = useState("");
+
+  // Web Audio + Haptic helper (independent of TTS)
+  const beepCtxRef = useRef<AudioContext | null>(null);
+  const triggerMorseFeedback = useCallback((type: "dot" | "dash") => {
+    if (!sensoryEnabled) return;
+    const durationMs = type === "dot" ? 100 : 300;
+    try {
+      if (!beepCtxRef.current) beepCtxRef.current = new AudioContext();
+      const ctx = beepCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 600;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + durationMs / 1000);
+    } catch { /* noop */ }
+    try { navigator.vibrate?.(durationMs); } catch { /* noop */ }
+  }, [sensoryEnabled]);
+
   // Logs
   const [logs, setLogs] = useState<string[]>([t("logInit"), t("logAwaiting")]);
   const logRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const calFileInputRef = useRef<HTMLInputElement>(null);
+  const morseCalFileInputRef = useRef<HTMLInputElement>(null);
 
   // Accent-aware chart colors
   const chartColors = {
@@ -219,6 +247,52 @@ export default function DecoderView({ researcherName, institution }: Props) {
     [addLog, calibration, toast, t, streamStatus, activeData.length, handleReset]
   );
 
+  // === MORSE CALIBRATION CSV (dot_max_ticks, dash_min_ticks) ===
+  const handleMorseCalUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = (ev.target?.result as string) || "";
+        const lines = text.trim().split("\n").filter((l) => l.trim());
+        if (lines.length < 1) {
+          toast({ variant: "destructive", title: "Morse CSV Error", description: "File kosong.", duration: 4000 });
+          return;
+        }
+        const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
+        const dotIdx = header.indexOf("dot_max_ticks");
+        const dashIdx = header.indexOf("dash_min_ticks");
+        let dataLine: string;
+        let dMax: number, dMin: number;
+        if (dotIdx !== -1 && dashIdx !== -1 && lines.length >= 2) {
+          const cols = lines[1].split(",").map((c) => c.trim());
+          dMax = parseInt(cols[dotIdx], 10);
+          dMin = parseInt(cols[dashIdx], 10);
+        } else {
+          // Allow headerless: e.g. "3,4"
+          dataLine = lines[0];
+          const cols = dataLine.split(",").map((c) => c.trim());
+          dMax = parseInt(cols[0], 10);
+          dMin = parseInt(cols[1], 10);
+        }
+        if (!Number.isFinite(dMax) || !Number.isFinite(dMin) || dMax < 1 || dMin <= dMax) {
+          toast({ variant: "destructive", title: "Morse CSV Invalid", description: "Format: dot_max_ticks,dash_min_ticks (dash_min > dot_max)", duration: 5000 });
+          addLog("[ERR] Morse calibration rejected — invalid values.");
+          return;
+        }
+        setDotMaxTicks(dMax);
+        setDashMinTicks(dMin);
+        setMorseCalFileName(file.name);
+        toast({ title: "✓ Morse Calibration", description: `DOT ≤ ${dMax} ticks · DASH ≥ ${dMin} ticks`, duration: 4000 });
+        addLog(`[CAL] Morse thresholds updated: DOT≤${dMax}, DASH≥${dMin} (${file.name})`);
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    },
+    [addLog, toast]
+  );
+
   // === STREAMING ENGINE (DO NOT MODIFY TTS / GAP LOGIC) ===
   const processTickDecode = useCallback((pt: ScientificCsvPoint) => {
     const threshold = calibration.profile.threshold_od;
@@ -271,20 +345,23 @@ export default function DecoderView({ researcherName, institution }: Props) {
       }
     } else {
       if (highCountRef.current > 0) {
-        if (highCountRef.current >= 1 && highCountRef.current <= 2) {
+        const ticks = highCountRef.current;
+        if (ticks <= dotMaxTicks) {
           morseBufferRef.current += ".";
-          addLog(`[SIG] DOT detected (${highCountRef.current} ticks)`);
+          addLog(`[SIG] DOT detected (${ticks} ticks)`);
           playBeep("dot");
-        } else if (highCountRef.current >= 3) {
+          triggerMorseFeedback("dot");
+        } else if (ticks >= dashMinTicks) {
           morseBufferRef.current += "-";
-          addLog(`[SIG] DASH detected (${highCountRef.current} ticks)`);
+          addLog(`[SIG] DASH detected (${ticks} ticks)`);
           playBeep("dash");
+          triggerMorseFeedback("dash");
         }
         highCountRef.current = 0;
       }
       lowCountRef.current++;
     }
-  }, [addLog, playBeep, speakText, sensoryEnabled, calibration.profile.threshold_od]);
+  }, [addLog, playBeep, speakText, sensoryEnabled, calibration.profile.threshold_od, dotMaxTicks, dashMinTicks, triggerMorseFeedback]);
 
   const handleStart = useCallback(() => {
     if (!csvLoaded || pendingData.length === 0) {
@@ -553,6 +630,35 @@ export default function DecoderView({ researcherName, institution }: Props) {
                 </button>
               )}
               <p className="text-[10px] text-muted-foreground font-mono-sci text-center">{t("calibrationFormat")}</p>
+
+              {/* Morse Calibration CSV */}
+              <div className="border-t border-border pt-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-muted-foreground font-mono-sci uppercase tracking-wider">Kalibrasi Morse</label>
+                  <span className="text-[10px] font-mono-sci text-accent">DOT≤{dotMaxTicks} · DASH≥{dashMinTicks}</span>
+                </div>
+                <input ref={morseCalFileInputRef} type="file" accept=".csv" className="hidden" onChange={handleMorseCalUpload} />
+                {morseCalFileName ? (
+                  <div className="rounded-lg border border-accent/30 bg-accent/5 p-2 flex items-center justify-between">
+                    <p className="text-[10px] font-mono-sci text-accent truncate max-w-[180px]">📐 {morseCalFileName}</p>
+                    <button
+                      onClick={() => { setDotMaxTicks(3); setDashMinTicks(4); setMorseCalFileName(""); addLog("[CAL] Morse calibration reset to defaults (3,4)."); }}
+                      className="text-destructive hover:text-destructive/80 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => morseCalFileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-accent/40 text-accent text-xs font-medium hover:bg-accent/5 transition-colors"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Unggah Kalibrasi Morse (.csv)
+                  </button>
+                )}
+                <p className="text-[10px] text-muted-foreground font-mono-sci text-center">Format: dot_max_ticks,dash_min_ticks</p>
+              </div>
             </div>
 
             {/* SECTION B: Simulasi Sinyal */}
