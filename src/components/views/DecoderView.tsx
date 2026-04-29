@@ -87,11 +87,39 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const wordBufferRef = useRef("");
   const lastSpokenRef = useRef("");
 
+  // Morse tick calibration (dynamic via CSV)
+  const [dotMaxTicks, setDotMaxTicks] = useState(3);
+  const [dashMinTicks, setDashMinTicks] = useState(4);
+  const [morseCalFileName, setMorseCalFileName] = useState("");
+
+  // Web Audio + Haptic helper (independent of TTS)
+  const beepCtxRef = useRef<AudioContext | null>(null);
+  const triggerMorseFeedback = useCallback((type: "dot" | "dash") => {
+    if (!sensoryEnabled) return;
+    const durationMs = type === "dot" ? 100 : 300;
+    try {
+      if (!beepCtxRef.current) beepCtxRef.current = new AudioContext();
+      const ctx = beepCtxRef.current;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 600;
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + durationMs / 1000);
+    } catch { /* noop */ }
+    try { navigator.vibrate?.(durationMs); } catch { /* noop */ }
+  }, [sensoryEnabled]);
+
   // Logs
   const [logs, setLogs] = useState<string[]>([t("logInit"), t("logAwaiting")]);
   const logRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const calFileInputRef = useRef<HTMLInputElement>(null);
+  const morseCalFileInputRef = useRef<HTMLInputElement>(null);
 
   // Accent-aware chart colors
   const chartColors = {
