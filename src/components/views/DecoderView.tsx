@@ -299,20 +299,23 @@ export default function DecoderView({ researcherName, institution }: Props) {
       }
     } else {
       if (highCountRef.current > 0) {
-        if (highCountRef.current >= 1 && highCountRef.current <= 2) {
+        const ticks = highCountRef.current;
+        if (ticks <= dotMaxTicks) {
           morseBufferRef.current += ".";
-          addLog(`[SIG] DOT detected (${highCountRef.current} ticks)`);
+          addLog(`[SIG] DOT detected (${ticks} ticks)`);
           playBeep("dot");
-        } else if (highCountRef.current >= 3) {
+          triggerMorseFeedback("dot");
+        } else if (ticks >= dashMinTicks) {
           morseBufferRef.current += "-";
-          addLog(`[SIG] DASH detected (${highCountRef.current} ticks)`);
+          addLog(`[SIG] DASH detected (${ticks} ticks)`);
           playBeep("dash");
+          triggerMorseFeedback("dash");
         }
         highCountRef.current = 0;
       }
       lowCountRef.current++;
     }
-  }, [addLog, playBeep, speakText, sensoryEnabled, calibration.profile.threshold_od]);
+  }, [addLog, playBeep, speakText, sensoryEnabled, calibration.profile.threshold_od, dotMaxTicks, dashMinTicks, triggerMorseFeedback]);
 
   const handleStart = useCallback(() => {
     if (!csvLoaded || pendingData.length === 0) {
