@@ -129,6 +129,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
 
   // Logs
   const [logs, setLogs] = useState<string[]>([t("logInit"), t("logAwaiting")]);
+  const [logsCopied, setLogsCopied] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const calFileInputRef = useRef<HTMLInputElement>(null);
