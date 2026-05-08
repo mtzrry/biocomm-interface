@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Play, Pause, RotateCcw, Upload, Download, Activity, Droplets, Eye,
-  FileUp, Volume2, VolumeX, ChevronDown, CheckCircle2, FlaskConical, Trash2
+  FileUp, Volume2, VolumeX, ChevronDown, CheckCircle2, FlaskConical, Trash2, Copy, Check
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -129,6 +129,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
 
   // Logs
   const [logs, setLogs] = useState<string[]>([t("logInit"), t("logAwaiting")]);
+  const [logsCopied, setLogsCopied] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const calFileInputRef = useRef<HTMLInputElement>(null);
@@ -567,8 +568,26 @@ export default function DecoderView({ researcherName, institution }: Props) {
           {/* Right column */}
           <div className="lg:col-span-4 space-y-4">
             {/* Terminal */}
-            <div className="terminal-panel rounded-xl p-4 h-56 lg:h-72 flex flex-col">
-              <p className="text-xs opacity-60 mb-2">// {t("systemLog").toUpperCase()}</p>
+            <div className="terminal-panel rounded-xl p-4 h-56 lg:h-72 flex flex-col relative group">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs opacity-60">// {t("systemLog").toUpperCase()}</p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(logs.join("\n"));
+                      setLogsCopied(true);
+                      setTimeout(() => setLogsCopied(false), 1600);
+                    } catch {}
+                  }}
+                  title="Copy logs"
+                  aria-label="Copy logs"
+                  className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-md border border-current/20 opacity-50 hover:opacity-100 hover:bg-current/5 transition-all duration-200 active:scale-95"
+                >
+                  {logsCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  <span className="font-mono-sci">{logsCopied ? "copied" : "copy"}</span>
+                </button>
+              </div>
               <div ref={logRef} className="flex-1 overflow-y-auto text-xs leading-relaxed space-y-0.5 scrollbar-thin">
                 {logs.map((l, i) => (
                   <div key={i} className={
