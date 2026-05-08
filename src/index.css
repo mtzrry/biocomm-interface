@@ -179,6 +179,21 @@
     font-family: 'Inter', sans-serif;
   }
 
+  /* Globally hide scrollbars while preserving scroll */
+  html,
+  body,
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none;
+  }
+
   /* Font family toggle */
   [data-font-family="roboto"] body,
   [data-font-family="roboto"] {
