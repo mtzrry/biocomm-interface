@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Play, Pause, RotateCcw, Upload, Download, Activity, Droplets, Eye,
-  FileUp, Volume2, VolumeX, ChevronDown, CheckCircle2, FlaskConical, Trash2
+  FileUp, Volume2, VolumeX, ChevronDown, CheckCircle2, FlaskConical, Trash2, Copy, Check
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
