@@ -92,15 +92,15 @@
     --particle-hue-base: 340;
   }
 
-  /* ========== DARK MODE (emerald default) ========== */
+  /* ========== DARK MODE (emerald default) — Cyber Web3 ========== */
   .dark,
   .dark[data-accent="emerald"] {
-    --background: 222 47% 4%;
-    --foreground: 210 20% 92%;
-    --card: 222 47% 7%;
-    --card-foreground: 210 20% 92%;
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 20% 92%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 6% 7%;
+    --popover-foreground: 0 0% 96%;
     --primary: 160 84% 39%;
     --primary-foreground: 0 0% 100%;
     --secondary: 174 84% 24%;
