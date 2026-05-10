@@ -170,7 +170,7 @@ export default function SettingsPanel({ open, onClose }: Props) {
                         ? "border-primary bg-primary/10 text-foreground font-medium"
                         : "border-border text-muted-foreground hover:border-primary/40"
                     }`}
-                    style={{ fontFamily: f.value === "roboto" ? "'Roboto', sans-serif" : "'Inter', sans-serif" }}
+                    style={{ fontFamily: f.css }}
                   >
                     <div className="text-xs font-medium">{f.label}</div>
                     <div className="text-[10px] opacity-60">{f.desc}</div>
