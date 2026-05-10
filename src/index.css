@@ -203,6 +203,14 @@
   [data-font-family="inter"] {
     font-family: 'Inter', sans-serif;
   }
+  [data-font-family="arial"] body,
+  [data-font-family="arial"] {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  [data-font-family="times"] body,
+  [data-font-family="times"] {
+    font-family: 'Times New Roman', Times, serif;
+  }
 
   /* Font size scaling */
   [data-font-size="small"] {

@@ -23,9 +23,11 @@ export default function SettingsPanel({ open, onClose }: Props) {
     { value: "large", label: t("large") },
   ];
 
-  const fonts: { value: FontFamily; label: string; desc: string }[] = [
-    { value: "inter", label: "Inter", desc: t("clinical") },
-    { value: "roboto", label: "Roboto", desc: t("academic") },
+  const fonts: { value: FontFamily; label: string; desc: string; css: string }[] = [
+    { value: "inter", label: "Inter", desc: t("clinical"), css: "'Inter', sans-serif" },
+    { value: "roboto", label: "Roboto", desc: t("academic"), css: "'Roboto', sans-serif" },
+    { value: "arial", label: "Arial", desc: "Sans-serif", css: "Arial, Helvetica, sans-serif" },
+    { value: "times", label: "Times New Roman", desc: "Serif", css: "'Times New Roman', Times, serif" },
   ];
 
   const languages: { value: Language; label: string; flag: string }[] = [
@@ -168,7 +170,7 @@ export default function SettingsPanel({ open, onClose }: Props) {
                         ? "border-primary bg-primary/10 text-foreground font-medium"
                         : "border-border text-muted-foreground hover:border-primary/40"
                     }`}
-                    style={{ fontFamily: f.value === "roboto" ? "'Roboto', sans-serif" : "'Inter', sans-serif" }}
+                    style={{ fontFamily: f.css }}
                   >
                     <div className="text-xs font-medium">{f.label}</div>
                     <div className="text-[10px] opacity-60">{f.desc}</div>
