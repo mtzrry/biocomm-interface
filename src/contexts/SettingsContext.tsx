@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 
 export type Theme = "light" | "dark";
 export type FontSize = "small" | "medium" | "large";
-export type FontFamily = "inter" | "roboto";
+export type FontFamily = "inter" | "roboto" | "arial" | "times";
 export type AccentTheme = "emerald" | "blue" | "rose";
 
 interface SettingsState {
