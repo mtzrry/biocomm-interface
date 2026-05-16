@@ -30,13 +30,13 @@ export default function PaperView() {
           </div>
           <div className="mt-6 pt-6 border-t border-border flex flex-wrap gap-3">
             <a
-              href="https://drive.google.com/file/d/1QLQfkIyrLwbMz7doKNvyBNZbA2VTfBbK/view?usp=sharing"
+              href="https://drive.google.com/drive/folders/1btE1TsBuUy7ZJFUz4tvNMHu0LnWisLX7?usp=sharing"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm glow-btn"
             >
               <ExternalLink className="w-4 h-4" />
-              Lihat Makalah Penuh (View Full Paper)
+              Buka Folder Drive (Open Drive Folder)
             </a>
           </div>
         </motion.div>
