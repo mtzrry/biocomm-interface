@@ -41,39 +41,6 @@ export default function PaperView() {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="glass-panel-strong rounded-2xl p-8 mt-6"
-        >
-          <div className="flex items-start gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-primary/10">
-              <FolderOpen className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-foreground mb-1">
-                Makalah Penelitian Lainnya (Other Research Papers)
-              </h3>
-              <p className="text-xs text-muted-foreground font-mono-sci">
-                Supplementary publications &amp; supporting documents
-              </p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-            Akses koleksi makalah penelitian tambahan, dokumen pendukung, dan publikasi terkait
-            proyek Micorse melalui folder Google Drive di bawah ini.
-          </p>
-          <a
-            href="https://drive.google.com/drive/folders/1btE1TsBuUy7ZJFUz4tvNMHu0LnWisLX7"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm glow-btn"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Buka Folder Drive (Open Drive Folder)
-          </a>
-        </motion.div>
       </div>
     </div>
   );
