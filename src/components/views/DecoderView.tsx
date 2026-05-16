@@ -806,6 +806,43 @@ export default function DecoderView({ researcherName, institution }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Full-width Terminal / System Log */}
+        <div className="mt-4 terminal-panel rounded-xl p-4 h-72 md:h-80 flex flex-col relative group">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs opacity-60">// {t("systemLog").toUpperCase()}</p>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(logs.join("\n"));
+                  setLogsCopied(true);
+                  setTimeout(() => setLogsCopied(false), 1600);
+                } catch {}
+              }}
+              title="Copy logs"
+              aria-label="Copy logs"
+              className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-md border border-current/20 opacity-50 hover:opacity-100 hover:bg-current/5 transition-all duration-200 active:scale-95"
+            >
+              {logsCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+              <span className="font-mono-sci">{logsCopied ? "copied" : "copy"}</span>
+            </button>
+          </div>
+          <div ref={logRef} className="flex-1 overflow-y-auto text-xs leading-relaxed space-y-0.5 scrollbar-hide">
+            {logs.map((l, i) => (
+              <div key={i} className={
+                l.startsWith("[CSV]") ? "text-emerald-400" :
+                l.startsWith("[ERR]") ? "text-red-400" :
+                l.startsWith("[DEC]") ? "text-cyan-400" :
+                l.startsWith("[CAL]") ? "text-yellow-400" :
+                l.startsWith("[SIG]") ? "text-teal-300" :
+                l.includes("SELESAI") ? "text-emerald-300 font-bold" :
+                "opacity-80"
+              }>{l}</div>
+            ))}
+            {streamStatus === "streaming" && <span className="animate-pulse-glow">▌</span>}
+          </div>
+        </div>
       </div>
     </div>
   );
