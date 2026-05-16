@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FileText, ExternalLink } from "lucide-react";
+import { FileText, ExternalLink, FolderOpen } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PaperView() {
