@@ -657,7 +657,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
             </div>
 
             {/* SECTION B: Simulasi Sinyal */}
-            <div className="glass-panel-strong rounded-xl settings-panel-padding space-y-3 border-primary/20">
+            <div className="glass-panel-strong rounded-xl settings-panel-padding space-y-3 border-primary/20 order-1">
               <div className="flex items-center gap-2 mb-1">
                 <Activity className="w-4 h-4 text-primary" />
                 <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono-sci">{t("simulasiSinyal")}</h3>
