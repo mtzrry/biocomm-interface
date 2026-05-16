@@ -566,9 +566,9 @@ export default function DecoderView({ researcherName, institution }: Props) {
           </div>
 
           {/* Right column */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 flex flex-col gap-4">
             {/* SECTION A: Setup Organisme */}
-            <div className="glass-panel-strong rounded-xl settings-panel-padding space-y-3">
+            <div className="glass-panel-strong rounded-xl settings-panel-padding space-y-3 order-2">
               <div className="flex items-center gap-2 mb-1">
                 <FlaskConical className="w-4 h-4 text-accent" />
                 <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono-sci">{t("setupOrganism")}</h3>
