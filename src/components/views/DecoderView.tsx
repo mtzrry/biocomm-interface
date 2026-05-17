@@ -180,6 +180,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
     setDecodedLetters([]);
     setDecodedWord("");
     setTranslatedWord("");
+    setDecodedText("");
     setStreamStatus("idle");
     setPendingData([]);
     setCsvLoaded(false);
