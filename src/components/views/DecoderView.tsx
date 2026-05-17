@@ -807,6 +807,51 @@ export default function DecoderView({ researcherName, institution }: Props) {
           </div>
         </div>
 
+        {/* Final Decoded Result Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 rounded-xl p-5 md:p-7 bg-black/60 backdrop-blur-xl border border-rose-500/50 relative overflow-hidden"
+          style={{
+            boxShadow:
+              "inset 0 1px 0 0 hsl(0 0% 100% / 0.06), inset 0 0 40px hsl(330 100% 50% / 0.08), 0 0 30px hsl(330 100% 60% / 0.15)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <p className="font-mono text-xs text-rose-400 tracking-[0.2em] uppercase">
+              ▸ Hasil Akhir Translasi (Final Output)
+            </p>
+            {streamStatus === "streaming" && (
+              <span className="flex items-center gap-1.5 text-[10px] font-mono text-rose-400/80 uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                live
+              </span>
+            )}
+          </div>
+          {decodedWord ? (
+            <div className="space-y-2">
+              <p
+                className="text-4xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-words leading-tight"
+                style={{
+                  textShadow:
+                    "0 0 12px hsl(330 100% 60% / 0.7), 0 0 32px hsl(330 100% 55% / 0.45), 0 2px 4px hsl(0 0% 0% / 0.8)",
+                }}
+              >
+                {decodedWord}
+              </p>
+              {translatedWord && (
+                <p className="text-base md:text-lg font-mono text-rose-200/80 tracking-wide">
+                  → {translatedWord}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-3xl md:text-4xl lg:text-5xl font-mono font-bold text-zinc-600 tracking-wider">
+              [ MENUNGGU SINYAL... ]
+            </p>
+          )}
+        </motion.div>
+
         {/* Full-width Terminal / System Log */}
         <div className="mt-4 terminal-panel rounded-xl p-4 h-72 md:h-80 flex flex-col relative group">
           <div className="flex items-center justify-between mb-2">
