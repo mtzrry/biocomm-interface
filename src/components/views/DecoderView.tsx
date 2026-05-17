@@ -834,16 +834,16 @@ export default function DecoderView({ researcherName, institution }: Props) {
               </span>
             )}
           </div>
-          {decodedWord ? (
+          {decodedText.trim() ? (
             <div className="space-y-1.5 sm:space-y-2 min-w-0">
               <p
-                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-all leading-tight"
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-words leading-tight whitespace-pre-wrap"
                 style={{
                   textShadow:
                     "0 0 12px hsl(330 100% 60% / 0.7), 0 0 32px hsl(330 100% 55% / 0.45), 0 2px 4px hsl(0 0% 0% / 0.8)",
                 }}
               >
-                {decodedWord}
+                {decodedText}
               </p>
               {translatedWord && (
                 <p className="text-sm sm:text-base md:text-lg font-mono text-rose-200/80 tracking-wide break-words">
