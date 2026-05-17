@@ -811,27 +811,27 @@ export default function DecoderView({ researcherName, institution }: Props) {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-4 rounded-xl p-5 md:p-7 bg-black/60 backdrop-blur-xl border border-rose-500/50 relative overflow-hidden"
+          className="mt-4 sm:mt-5 md:mt-6 rounded-xl p-4 sm:p-5 md:p-6 lg:p-7 bg-black/60 backdrop-blur-xl border border-rose-500/50 relative overflow-hidden"
           style={{
             boxShadow:
               "inset 0 1px 0 0 hsl(0 0% 100% / 0.06), inset 0 0 40px hsl(330 100% 50% / 0.08), 0 0 30px hsl(330 100% 60% / 0.15)",
           }}
         >
-          <div className="flex items-center justify-between mb-3">
-            <p className="font-mono text-xs text-rose-400 tracking-[0.2em] uppercase">
+          <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3 flex-wrap">
+            <p className="font-mono text-[10px] sm:text-xs text-rose-400 tracking-[0.18em] sm:tracking-[0.2em] uppercase">
               ▸ Hasil Akhir Translasi (Final Output)
             </p>
             {streamStatus === "streaming" && (
-              <span className="flex items-center gap-1.5 text-[10px] font-mono text-rose-400/80 uppercase tracking-widest">
+              <span className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-mono text-rose-400/80 uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                 live
               </span>
             )}
           </div>
           {decodedWord ? (
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2 min-w-0">
               <p
-                className="text-4xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-words leading-tight"
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-all leading-tight"
                 style={{
                   textShadow:
                     "0 0 12px hsl(330 100% 60% / 0.7), 0 0 32px hsl(330 100% 55% / 0.45), 0 2px 4px hsl(0 0% 0% / 0.8)",
@@ -840,13 +840,13 @@ export default function DecoderView({ researcherName, institution }: Props) {
                 {decodedWord}
               </p>
               {translatedWord && (
-                <p className="text-base md:text-lg font-mono text-rose-200/80 tracking-wide">
+                <p className="text-sm sm:text-base md:text-lg font-mono text-rose-200/80 tracking-wide break-words">
                   → {translatedWord}
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-3xl md:text-4xl lg:text-5xl font-mono font-bold text-zinc-600 tracking-wider">
+            <p className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-mono font-bold text-zinc-600 tracking-wider break-words">
               [ MENUNGGU SINYAL... ]
             </p>
           )}
