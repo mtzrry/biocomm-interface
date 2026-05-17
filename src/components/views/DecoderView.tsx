@@ -322,6 +322,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
           const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
           const morse = morseBufferRef.current;
           setDecodedLetters((prev) => [...prev, { char, morse }]);
+          setDecodedText((prev) => prev + char);
           wordBufferRef.current += char;
           addLog(`[DEC] Letter: '${char}' (${morse})`);
           if (char !== "?") playBeep("dot");
@@ -330,6 +331,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
           const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
           const morse = morseBufferRef.current;
           setDecodedLetters((prev) => [...prev, { char, morse }]);
+          setDecodedText((prev) => prev + char + " ");
           wordBufferRef.current += char;
           morseBufferRef.current = "";
           const word = wordBufferRef.current;
@@ -355,6 +357,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
               speakText(word); lastSpokenRef.current = word;
             }
           }
+          setDecodedText((prev) => (prev.endsWith(" ") || prev.length === 0 ? prev : prev + " "));
           wordBufferRef.current = "";
         }
         lowCountRef.current = 0;
