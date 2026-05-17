@@ -80,6 +80,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
   const [decodedLetters, setDecodedLetters] = useState<{ char: string; morse: string }[]>([]);
   const [decodedWord, setDecodedWord] = useState("");
   const [translatedWord, setTranslatedWord] = useState("");
+  const [decodedText, setDecodedText] = useState("");
   const [manualText, setManualText] = useState("");
   const highCountRef = useRef(0);
   const lowCountRef = useRef(0);
@@ -179,6 +180,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
     setDecodedLetters([]);
     setDecodedWord("");
     setTranslatedWord("");
+    setDecodedText("");
     setStreamStatus("idle");
     setPendingData([]);
     setCsvLoaded(false);
@@ -320,6 +322,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
           const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
           const morse = morseBufferRef.current;
           setDecodedLetters((prev) => [...prev, { char, morse }]);
+          setDecodedText((prev) => prev + char);
           wordBufferRef.current += char;
           addLog(`[DEC] Letter: '${char}' (${morse})`);
           if (char !== "?") playBeep("dot");
@@ -328,6 +331,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
           const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
           const morse = morseBufferRef.current;
           setDecodedLetters((prev) => [...prev, { char, morse }]);
+          setDecodedText((prev) => prev + char + " ");
           wordBufferRef.current += char;
           morseBufferRef.current = "";
           const word = wordBufferRef.current;
@@ -353,6 +357,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
               speakText(word); lastSpokenRef.current = word;
             }
           }
+          setDecodedText((prev) => (prev.endsWith(" ") || prev.length === 0 ? prev : prev + " "));
           wordBufferRef.current = "";
         }
         lowCountRef.current = 0;
@@ -394,6 +399,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
         if (morseBufferRef.current) {
           const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
           setDecodedLetters((prev) => [...prev, { char, morse: morseBufferRef.current }]);
+          setDecodedText((prev) => prev + char);
           wordBufferRef.current += char;
           morseBufferRef.current = "";
         }
@@ -828,16 +834,16 @@ export default function DecoderView({ researcherName, institution }: Props) {
               </span>
             )}
           </div>
-          {decodedWord ? (
+          {decodedText.trim() ? (
             <div className="space-y-1.5 sm:space-y-2 min-w-0">
               <p
-                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-all leading-tight"
+                className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-mono font-bold text-white break-words leading-tight whitespace-pre-wrap"
                 style={{
                   textShadow:
                     "0 0 12px hsl(330 100% 60% / 0.7), 0 0 32px hsl(330 100% 55% / 0.45), 0 2px 4px hsl(0 0% 0% / 0.8)",
                 }}
               >
-                {decodedWord}
+                {decodedText}
               </p>
               {translatedWord && (
                 <p className="text-sm sm:text-base md:text-lg font-mono text-rose-200/80 tracking-wide break-words">
