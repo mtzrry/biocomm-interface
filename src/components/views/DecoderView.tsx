@@ -399,6 +399,7 @@ export default function DecoderView({ researcherName, institution }: Props) {
         if (morseBufferRef.current) {
           const char = MORSE_TO_CHAR[morseBufferRef.current] || "?";
           setDecodedLetters((prev) => [...prev, { char, morse: morseBufferRef.current }]);
+          setDecodedText((prev) => prev + char);
           wordBufferRef.current += char;
           morseBufferRef.current = "";
         }
